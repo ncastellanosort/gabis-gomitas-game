@@ -244,20 +244,22 @@ const ARYA = {
   ],
 };
 
+// Chif es un panda rojo: orejitas redondas con borde blanco, carita blanca,
+// patas oscuras y cola de anillos.
 const CHIF = [
-  '.........o...o..',
-  '.........oo.oo..',
-  '........ooooooo.',
-  '........okoooko.',
-  '........wwoooww.',
-  '.........wwnww..',
-  '.......oooww....',
-  '......oooowwo...',
-  '.....ooooowwo...',
-  '.oo..ooooowwo...',
-  'ooow.oooooooo...',
-  'oooww.ooo.ooo...',
-  '.ooww.bbb.bbb...',
+  '........ww....ww',
+  '........oooooooo',
+  '........owoooowo',
+  '........okooooko',
+  '........wwwoowww',
+  '.........wwnnww.',
+  '.......oooobb...',
+  '......ooooobbb..',
+  '.....oooooobbb..',
+  '.oo..oooooobbb..',
+  'owwo.ooooobbbb..',
+  'oowwo.bbb.bbb...',
+  '.oowo.bbb.bbb...',
 ];
 
 const TIANA = [

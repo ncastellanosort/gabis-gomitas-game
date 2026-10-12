@@ -94,10 +94,10 @@ export const CONFIG = {
       unknownClue: '???',
       unknownNote: 'Pista sin encontrar',
       suspects: {
-        chif: { name: 'Chif', kind: 'zorrito' },
+        chif: { name: 'Chif', kind: 'panda rojo' },
         tiana: { name: 'Tiana', kind: 'ovejita en pijama' },
         arya: { name: 'Arya', kind: 'tu fiel asistente' },
-        nico: { name: 'Nicolás', kind: 'el dueño de las gomitas' },
+        nico: { name: 'Mi bobio', kind: 'el dueño de las gomitas' },
         shadow: { name: 'La sombra', kind: 'figura misteriosa' },
       },
       // Coartadas al interrogarlos
@@ -107,10 +107,10 @@ export const CONFIG = {
         nico: 'Yo solo vine por mis gomitas. Desaparecieron esta noche.',
       },
       notAsked: 'Aún no lo has interrogado.',
-      // La sombra que huye (resulta ser Nicolás buscando sus gomitas)
+      // La sombra que huye (resulta ser su bobio buscando sus gomitas)
       shadowLines: ['¿Quién anda ahí?', '¡Otra vez esa sombra!', '¡Alto ahí! ¡Policía de peluches!'],
       shadowNote: 'Huye cada vez que te acercas.',
-      nicoReveal: '¡No me acuses! Soy yo, Nicolás. Solo busco mis gomitas...',
+      nicoReveal: '¡No me acuses! Soy yo, tu bobio. Solo busco mis gomitas...',
       // Notas anónimas clavadas por el jardín
       papers: [
         'Una nota: «No sigas buscando, detective.» La firma una patita.',
@@ -136,8 +136,8 @@ export const CONFIG = {
       revealBtn: '¿QUIÉN FALTA?',
       needClues: 'Te faltan pistas, detective. Sin pruebas no hay caso.',
       defense: {
-        chif: '¡Protesto! Mis orejas son puntudas, y la foto muestra orejas largas.',
-        tiana: '¡Beee! Yo soy beige y tengo pezuñas. Mira los pelitos y las huellas.',
+        chif: '¡Protesto! Mis orejas son chiquitas y redondas, y la foto muestra orejas largas.',
+        tiana: 'Guatafac, mira los pelitos y las huellas.',
         nico: '¡A mí también me robaron! Y yo no dejo pelitos naranjas ni babas.',
       },
       aryaRevealed: 'Naranjita, con patitas, orejas largas y babas... ¡¿ARYA?!',
@@ -145,7 +145,7 @@ export const CONFIG = {
       endHer1: 'Arya... ¿qué hay en tu camita?',
       endArya1: '(aullido MUY inocente)',
       endHer2: '¡¿PIPU?!',
-      endArya2: 'Guau... solo quería dormir con él.',
+      endArya2: 'Guau... solo quería tener una almohada como Pipu para dormir :(',
       endPipu: '¡BUUURP!',
       endHim: '¿Y mis gomitas? ¡Era un paquete entero!',
       endArya3: '(aullido otra vez)',
@@ -192,9 +192,9 @@ export const CONFIG = {
     pantsShade: '#2a2e45',
     shoes: '#f25c54',
   },
-  // Arya (cocker), Chif (zorrito), Tiana (ovejita en pijama de conejo) y Pipu (pingüino)
+  // Arya (cocker), Chif (panda rojo), Tiana (ovejita en pijama de conejo) y Pipu (pingüino)
   arya: { coat: '#e08a3c', ears: '#b8662e', light: '#f8cf9c', nose: '#3a2420' },
-  chif: { coat: '#f07a2a', dark: '#5a3324', light: '#fff4e6', nose: '#3a2420' },
+  chif: { coat: '#cf5a2c', dark: '#3a2420', light: '#fff4e6', nose: '#1a1210' },
   tiana: { pajama: '#e6cfa4', pajamaShade: '#c9ae80', earInside: '#f7a8b8', wool: '#ffffff', face: '#f6dcd0' },
   pipu: { body: '#8e939c', belly: '#ffffff', beak: '#ffb02e', eyes: '#26262e', closedEyes: '#5d626c' },
 

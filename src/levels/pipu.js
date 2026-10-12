@@ -11,7 +11,7 @@ export function createPipuLevel() {
   // ---- Zona 1: la escena del crimen ----
   ground(0, 32);
 
-  // ---- Zona 2: la madriguera de Chif ----
+  // ---- Zona 2: la colina de Chif ----
   ground(36, 97);
   plat(40, 42, 10);
   plat(44, 46, 8);
