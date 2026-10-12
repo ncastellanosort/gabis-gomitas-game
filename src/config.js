@@ -176,24 +176,25 @@ export const CONFIG = {
     hairLight: '#b8662e',
     skin: '#dba06c',
     skinShade: '#b97c4c',
-    top: '#ffd23f',
-    topShade: '#e6a21e',
-    skirt: '#7c4ddb',
-    skirtShade: '#5a33ad',
-    shoes: '#ffffff',
-    soles: '#ff7fae',
+    shirt: '#4d525e', // camisa de cuadros: gris oscuro...
+    shirtCheck: '#1c2647', // ...con azul muy oscuro
+    pants: '#7d7068', // café tirando a gris
+    pantsShade: '#655a53',
+    shoes: '#7b1e3a', // tenis color vino
+    soles: '#561428', // suela, un vino más oscuro
   },
   him: {
     hair: '#17131c',
     hairLight: '#3a3552',
     skin: '#b5713f',
     skinShade: '#93562c',
-    jacket: '#2f62e0',
-    jacketShade: '#2148b0',
-    shirt: '#f4f4f4',
+    shirt: '#f7f7f7', // camiseta blanca
+    shirtShade: '#cfd3dd',
+    watch: '#8a8f99', // relojito gris
     pants: '#3a3f5c',
     pantsShade: '#2a2e45',
-    shoes: '#f25c54',
+    shoes: '#ffffff', // tenis blancos
+    soles: '#c9cdd8',
   },
   // Arya (cocker), Chif (panda rojo), Tiana (ovejita en pijama de conejo) y Pipu (pingüino)
   arya: { coat: '#e08a3c', ears: '#b8662e', light: '#f8cf9c', nose: '#3a2420' },

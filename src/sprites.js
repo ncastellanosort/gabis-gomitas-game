@@ -75,12 +75,14 @@ const HER_FACES = [
 ];
 const HER_BLINK = ['........', '........', '.ss..ss.', '.kk..kk.', '........', '........'];
 
+// Camisa de cuadros (y / Y alternados), manos (s) y pantalón (v).
+const HER_PANTS = ['.....vvvvvv.....', '.....vvVVvv.....'];
 const HER_TORSO = {
-  idle: ['......yyyy......', '....yyyyyyyy....', '....sYyyyyYs....', '....svvvvvvs....', '....svvvvvvs....', '....vvvvvvvv....', '...vVvvvvvvVv...'],
-  crossed: ['......yyyy......', '....yyyyyyyy....', '....ysssSssy....', '.....vvvvvv.....', '.....vvvvvv.....', '....vvvvvvvv....', '...vVvvvvvvVv...'],
-  swing: ['......yyyy......', '....yyyyyyyy....', '....sYyyyyYs....', '...s.vvvvvv.s...', '.....vvvvvv.....', '....vvvvvvvv....', '...vVvvvvvvVv...'],
-  up: ['......yyyy......', '....yyyyyyyy....', '..ssyyyyyyyyss..', '.....vvvvvv.....', '.....vvvvvv.....', '....vvvvvvvv....', '..vvVvvvvvvVvv..'],
-  fall: ['.s....yyyy....s.', '..s.yyyyyyyy.s..', '...yyyyyyyyyy...', '.....vvvvvv.....', '....vvvvvvvv....', '...vvvvvvvvvv...', '..vvVvvvvvvVvv..'],
+  idle: ['......yYyY......', '....YyYyYyYy....', '....yYyYyYyY....', '....YyYyYyYy....', '....sYyYyYys....', ...HER_PANTS],
+  crossed: ['......yYyY......', '....YyYyYyYy....', '....ysYYYYsy....', '.....YyYyYy.....', '.....yYyYyY.....', ...HER_PANTS],
+  swing: ['......yYyY......', '....YyYyYyYy....', '....yYyYyYyY....', '...Y.yYyYyY.Y...', '...s.YyYyYy.s...', ...HER_PANTS],
+  up: ['......yYyY......', '....YyYyYyYy....', '..sYyYyYyYyYys..', '.....yYyYyY.....', '.....YyYyYy.....', ...HER_PANTS],
+  fall: ['.s....yYyY....s.', '..Y.YyYyYyYy.Y..', '...YyYyYyYyYy...', '.....yYyYyY.....', '.....YyYyYy.....', ...HER_PANTS],
 };
 
 const HER_LEGS = {
@@ -118,11 +120,12 @@ const HIM_FACES = {
 };
 
 const HIM_LOW = ['.....nnnnnn.....', '.....nnNNnn.....', '.....nn..nn.....'];
+// Camiseta blanca de manga corta (j / J), brazos (t) y relojito (g) en la muñeca.
 const HIM_TORSO = {
-  hold: ['................', '................', '................', '......jwwj......', '....jjjwwjjj....', '...jjjjwwjjjj...', '...jJjjwwjjjjjt.', '...jJjjwwjjj....', '...t.jjjjjj.....', ...HIM_LOW],
-  waveA: ['.t..............', '.j..............', '.jj.............', '..jj..jwwj......', '...jjjjwwjjj....', '....jjjwwjjjj...', '....Jjjwwjjjjjt.', '....Jjjwwjjj....', '.....jjjjjj.....', ...HIM_LOW],
-  waveB: ['t...............', '.j..............', '.jj.............', '..jj..jwwj......', '...jjjjwwjjj....', '....jjjwwjjjj...', '....Jjjwwjjjjjt.', '....Jjjwwjjj....', '.....jjjjjj.....', ...HIM_LOW],
-  cheer: ['.t............t.', '.j............j.', '.jj..........jj.', '..jj..jwwj..jj..', '...jjjjwwjjjj...', '....jjjwwjjj....', '....Jjjwwjjj....', '....Jjjwwjjj....', '.....jjjjjj.....', ...HIM_LOW],
+  hold: ['................', '................', '................', '......jwwj......', '....jjjwwjjj....', '...jjjjwwjjjj...', '...tJjjwwjjjttt.', '...gJjjwwjjj....', '...t.jjjjjj.....', ...HIM_LOW],
+  waveA: ['.t..............', '.g..............', '.tj.............', '..jj..jwwj......', '...jjjjwwjjj....', '....jjjwwjjjj...', '....Jjjwwjjjttt.', '....Jjjwwjjj....', '.....jjjjjj.....', ...HIM_LOW],
+  waveB: ['t...............', '.g..............', '.tj.............', '..jj..jwwj......', '...jjjjwwjjj....', '....jjjwwjjjj...', '....Jjjwwjjjttt.', '....Jjjwwjjj....', '.....jjjjjj.....', ...HIM_LOW],
+  cheer: ['.t............t.', '.g............t.', '.tj..........jt.', '..jj..jwwj..jj..', '...jjjjwwjjjj...', '....jjjwwjjj....', '....Jjjwwjjj....', '....Jjjwwjjj....', '.....jjjjjj.....', ...HIM_LOW],
 };
 const HIM_LEGS = {
   stand: ['.....nn..nn.....', '.....nn..nn.....', '.....nn..nn.....', '.....nn..nn.....', '.....rr..rr.....', '.....rrW.rrW....'],
@@ -436,13 +439,14 @@ export function buildSprites(config) {
   const h = config.her;
   const herPal = {
     h: h.hairDark, H: h.hair, o: h.hairLight, s: h.skin, S: h.skinShade,
-    y: h.top, Y: h.topShade, v: h.skirt, V: h.skirtShade, w: h.shoes, p: h.soles,
+    y: h.shirt, Y: h.shirtCheck, v: h.pants, V: h.pantsShade, w: h.shoes, p: h.soles,
   };
+  const herLegsPal = { ...herPal, s: h.pants }; // las piernas van con pantalón
   const facePal = { k: '#2a1a1a', w: '#ffffff', m: '#8c2f3a', b: '#f58a9a', r: '#ff6f8f', p: '#ff3d6e', s: h.skin };
   const m = config.him;
   const himPal = {
-    k: m.hair, K: m.hairLight, t: m.skin, T: m.skinShade, j: m.jacket, J: m.jacketShade,
-    w: m.shirt, n: m.pants, N: m.pantsShade, r: m.shoes, W: '#ffffff',
+    k: m.hair, K: m.hairLight, t: m.skin, T: m.skinShade, j: m.shirt, J: m.shirtShade,
+    w: m.shirt, g: m.watch, n: m.pants, N: m.pantsShade, r: m.shoes, W: m.soles,
   };
   const himFacePal = { k: '#1c1216', w: '#ffffff', m: '#6e2430', b: '#e8756f', q: '#8fd3ff' };
 
@@ -480,7 +484,7 @@ export function buildSprites(config) {
       faces: HER_FACES.map((f, i) => fromRows(`her.face${i}`, f, facePal)),
       blink: fromRows('her.blink', HER_BLINK, facePal),
       torso: mapRows('her.torso', HER_TORSO, herPal),
-      legs: mapRows('her.legs', HER_LEGS, herPal),
+      legs: mapRows('her.legs', HER_LEGS, herLegsPal),
     },
     him: {
       head: fromRows('him.head', HIM_HEAD, himPal),
