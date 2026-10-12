@@ -176,8 +176,8 @@ export const CONFIG = {
     hairLight: '#b8662e',
     skin: '#dba06c',
     skinShade: '#b97c4c',
-    shirt: '#4d525e', // camisa de cuadros: gris oscuro...
-    shirtCheck: '#1c2647', // ...con azul muy oscuro
+    top: '#1d1b22', // top negro
+    topShine: '#3a3743',
     pants: '#7d7068', // café tirando a gris
     pantsShade: '#655a53',
     shoes: '#7b1e3a', // tenis color vino

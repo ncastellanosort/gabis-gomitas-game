@@ -75,14 +75,14 @@ const HER_FACES = [
 ];
 const HER_BLINK = ['........', '........', '.ss..ss.', '.kk..kk.', '........', '........'];
 
-// Camisa de cuadros (y / Y alternados), manos (s) y pantalón (v).
+// Top negro sin mangas (y, con brillo Y), brazos (s) y pantalón (v).
 const HER_PANTS = ['.....vvvvvv.....', '.....vvVVvv.....'];
 const HER_TORSO = {
-  idle: ['......yYyY......', '....YyYyYyYy....', '....yYyYyYyY....', '....YyYyYyYy....', '....sYyYyYys....', ...HER_PANTS],
-  crossed: ['......yYyY......', '....YyYyYyYy....', '....ysYYYYsy....', '.....YyYyYy.....', '.....yYyYyY.....', ...HER_PANTS],
-  swing: ['......yYyY......', '....YyYyYyYy....', '....yYyYyYyY....', '...Y.yYyYyY.Y...', '...s.YyYyYy.s...', ...HER_PANTS],
-  up: ['......yYyY......', '....YyYyYyYy....', '..sYyYyYyYyYys..', '.....yYyYyY.....', '.....YyYyYy.....', ...HER_PANTS],
-  fall: ['.s....yYyY....s.', '..Y.YyYyYyYy.Y..', '...YyYyYyYyYy...', '.....yYyYyY.....', '.....YyYyYy.....', ...HER_PANTS],
+  idle: ['......yyyy......', '....syyyyyys....', '....syYyyyys....', '....syyyyyys....', '....syyyyyys....', ...HER_PANTS],
+  crossed: ['......yyyy......', '....syyyyyys....', '....ssssSsss....', '.....yyyyyy.....', '.....yyyyyy.....', ...HER_PANTS],
+  swing: ['......yyyy......', '....syyyyyys....', '....syYyyyys....', '...s.yyyyyy.s...', '.....yyyyyy.....', ...HER_PANTS],
+  up: ['......yyyy......', '....syyyyyys....', '..sssyYyyyysss..', '.....yyyyyy.....', '.....yyyyyy.....', ...HER_PANTS],
+  fall: ['.s....yyyy....s.', '..s.syyyyyys.s..', '...ssyYyyyyss...', '.....yyyyyy.....', '.....yyyyyy.....', ...HER_PANTS],
 };
 
 const HER_LEGS = {
@@ -439,7 +439,7 @@ export function buildSprites(config) {
   const h = config.her;
   const herPal = {
     h: h.hairDark, H: h.hair, o: h.hairLight, s: h.skin, S: h.skinShade,
-    y: h.shirt, Y: h.shirtCheck, v: h.pants, V: h.pantsShade, w: h.shoes, p: h.soles,
+    y: h.top, Y: h.topShine, v: h.pants, V: h.pantsShade, w: h.shoes, p: h.soles,
   };
   const herLegsPal = { ...herPal, s: h.pants }; // las piernas van con pantalón
   const facePal = { k: '#2a1a1a', w: '#ffffff', m: '#8c2f3a', b: '#f58a9a', r: '#ff6f8f', p: '#ff3d6e', s: h.skin };
