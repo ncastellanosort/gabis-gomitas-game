@@ -220,6 +220,112 @@ const BUTTERFLY = [
   ['.......', '.b...b.', '.bbkbb.', '.b...b.'],
 ];
 
+// ------------------------------------------------------------------
+// ARYA (cocker naranjita, 18 x 13), CHIF, TIANA y PIPU
+// ------------------------------------------------------------------
+const ARYA_HEAD = ['...........aaaa...', '..........aaaaaa..', '.........eeaaakaa.', '.........eeaaaaaan'];
+const ARYA_BODY = ['aa.aaaaaaeeeaaa...', '.aaaaaaaaaeeaa....', '..aaaaaaaaaeww....', '..aaaaaaaaaaww....', '..aaaaaaaaaaa.....'];
+const ARYA = {
+  stand: [...ARYA_HEAD, 'a........eeeaaaww.', ...ARYA_BODY, '..aa.aa..aa.aa....', '..aa.aa..aa.aa....', '..ww.ww..ww.ww....'],
+  wag: [...ARYA_HEAD, '.a.......eeeaaaww.', ...ARYA_BODY, '..aa.aa..aa.aa....', '..aa.aa..aa.aa....', '..ww.ww..ww.ww....'],
+  run1: [...ARYA_HEAD, 'a........eeeaaaww.', ...ARYA_BODY, '..aa..aa.aa..aa...', '.aa....a.a....aa..', '.ww....w.w....ww..'],
+  run2: [...ARYA_HEAD, 'a........eeeaaaww.', ...ARYA_BODY, '...aaa....aaa.....', '...aa.....aa......', '...ww.....ww......'],
+  sit: [
+    ...ARYA_HEAD,
+    '.........eeeaaaww.',
+    '.........eeeaaa...',
+    '......aaaaeeaa....',
+    '....aaaaaaaeww....',
+    '...aaaaaaaaaww....',
+    'a.aaaaaaaaaaa.....',
+    'aaaaaaaaaaa.aa....',
+    '.aaaaaaa.aa.aa....',
+    '..wwww...ww.ww....',
+  ],
+};
+
+const CHIF = [
+  '.........o...o..',
+  '.........oo.oo..',
+  '........ooooooo.',
+  '........okoooko.',
+  '........wwoooww.',
+  '.........wwnww..',
+  '.......oooww....',
+  '......oooowwo...',
+  '.....ooooowwo...',
+  '.oo..ooooowwo...',
+  'ooow.oooooooo...',
+  'oooww.ooo.ooo...',
+  '.ooww.bbb.bbb...',
+];
+
+const TIANA = [
+  '..bb......bb..',
+  '..bpb....bpb..',
+  '..bpb....bpb..',
+  '..bpb....bpb..',
+  '..bbbbbbbbbb..',
+  '.bbbwwwwwwbbb.',
+  '.bbwwwwwwwwbb.',
+  '.bbffffffffbb.',
+  '.bbfkffffkfbb.',
+  '.bbffffffffbb.',
+  '..bbffmmffbb..',
+  '...bbbbbbbb...',
+  '..bbbbbbbbbb..',
+  '.fbbbbwwbbbbf.',
+  '..bbbbwwbbbb..',
+  '..bbbbbbbbbb..',
+  '..bbb....bbb..',
+  '..BBB....BBB..',
+];
+
+const PIPU = [
+  '....kkkkkk....',
+  '...kkkkkkkk...',
+  '..kkwkkkkwkk..',
+  '..kkkkyykkkk..',
+  '..kwwwyywwwk..',
+  '.kkwwwwwwwwkk.',
+  '.kwwwwwwwwwwk.',
+  'kkwwwwwwwwwwkk',
+  'kkwwwwwwwwwwkk',
+  'kkwwwwwwwwwwkk',
+  '.kwwwwwwwwwwk.',
+  '.kkwwwwwwwwkk.',
+  '..kkkkkkkkkk..',
+  '..yyy....yyy..',
+];
+const PIPU_SLEEP = PIPU.map((r, i) => (i === 2 ? '..kkggkkggkk..' : r));
+
+// Pistas del caso
+const CLUES = {
+  pelos: ['.o..o..o', 'oo.oo.oo', '.ooooOo.', '..oOoo..', '...oo...'],
+  huellas: ['.k.k.k.', '.k.k.k.', '.......', '..kkk..', '.kkkkk.', '.kkkkk.', '..kkk..'],
+  foto: ['wwwwwwwww', 'wsssssssw', 'wsskkkssw', 'wskkkkksw', 'wskkkkksw', 'wsksssksw', 'wsksssksw', 'wsssssssw', 'wwwwwwwww', 'wwwwwwwww'],
+  babas: ['...qqqqqq...', '.qqQQqqqqqq.', 'qqqqqqqQQqqq', '.qqqqqqqqqq.'],
+  envoltorio: ['p.......p', 'pp.ppp.pp', 'ppppwpppp', 'pppwwwppp', 'ppppwpppp', 'pp.ppp.pp', 'p.......p'],
+};
+const CLUE_PAL = { o: '#f08a3c', O: '#b8662e', k: '#4a3a5a', w: '#ffffff', s: '#5b6ea8', q: '#8fd3ff', Q: '#e6f6ff', p: '#ff5fa2' };
+const ZZZ = ['zzz', '.z.', 'zzz'];
+const NOTE = ['..n', '..n', 'nnn', 'nn.'];
+
+// Silueta de tiza: el contorno de Pipu, acostado.
+function chalkOutline(rows) {
+  const h = rows.length, w = rows[0].length;
+  const c = makeCanvas(h + 2, w + 2); // girado 90°
+  const x = c.getContext('2d');
+  const on = (px, py) => py >= 0 && py < h && px >= 0 && px < w && rows[py][px] !== '.';
+  x.fillStyle = '#ffffff';
+  for (let py = -1; py <= h; py++)
+    for (let px = -1; px <= w; px++) {
+      if (on(px, py)) continue;
+      if ((on(px + 1, py) || on(px - 1, py) || on(px, py + 1) || on(px, py - 1)) && (px + py) % 3 !== 0) x.fillRect(py + 1, w - px, 1, 1);
+    }
+  return c;
+}
+
 // Manchas redondeadas con luz y sombra (árboles, arbustos, nubes).
 function blob(circles, pal, seed = 1) {
   let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
@@ -325,7 +431,19 @@ export function buildSprites(config) {
     }
   }
 
+  const A = config.arya, C = config.chif, Ti = config.tiana, Pi = config.pipu;
+  const pipuPal = { k: Pi.body, w: Pi.belly, y: Pi.beak, g: Pi.closedEyes };
+
   return {
+    arya: mapRows('arya', ARYA, { a: A.coat, e: A.ears, w: A.light, k: '#2a1a1a', n: A.nose }),
+    chif: fromRows('chif', CHIF, { o: C.coat, w: C.light, b: C.dark, k: '#2a1a1a', n: C.nose }),
+    tiana: fromRows('tiana', TIANA, { b: Ti.pajama, B: Ti.pajamaShade, p: Ti.earInside, w: Ti.wool, f: Ti.face, k: '#2a1a1a', m: '#d9788a' }),
+    pipu: { awake: fromRows('pipu', PIPU, pipuPal), sleep: fromRows('pipuSleep', PIPU_SLEEP, pipuPal) },
+    chalk: chalkOutline(PIPU),
+    clues: mapRows('clue', CLUES, CLUE_PAL),
+    clueGhost: mapRows('clueGhost', CLUES, Object.fromEntries(Object.keys(CLUE_PAL).map((k) => [k, '#5b4a6b']))),
+    zzz: fromRows('zzz', ZZZ, { z: '#ffffff' }),
+    note: fromRows('note', NOTE, { n: '#ffffff' }),
     her: {
       head: fromRows('her.head', HER_HEAD, herPal),
       faces: HER_FACES.map((f, i) => fromRows(`her.face${i}`, f, facePal)),

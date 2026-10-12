@@ -6,9 +6,14 @@
 export const CONFIG = {
   // ---------- Textos ----------
   texts: {
-    title: 'Gomitas of Love',
-    subtitle: 'Una misión muy dulce para contentar a la crespita más linda',
-    play: 'JUGAR',
+    title: 'Gabis Hunger Games',
+    subtitle: 'Dos misiones para la crespita más linda',
+    // Menú de niveles
+    levels: {
+      gomitas: { tag: 'NIVEL 1', name: 'Gomitas of Love', desc: 'para cuando esté brava' },
+      pipu: { tag: 'NIVEL 2', name: 'El asesinato de Pipu', desc: 'un caso para la detective' },
+    },
+    menu: 'MENÚ',
     hintKeyboard: 'Mover: ← → o A / D   ·   Saltar: Espacio, W o ↑',
     hintTouch: 'Usa los botones de la pantalla para moverte y saltar',
     rotateHint: 'Gira el teléfono: en horizontal se juega más rico',
@@ -60,6 +65,81 @@ export const CONFIG = {
     finalNote: 'Las gomitas ayudan, pero lo que más quiero es verte feliz.',
     replay: 'VOLVER A JUGAR',
 
+    // ---------- Nivel 2: El asesinato de Pipu ----------
+    pipu: {
+      intro: [
+        'CASO 001: el asesinato de Pipu',
+        'Víctima: pingüino de peluche, chiquito y gordito',
+        'Detective a cargo: Gabi. Asistente: Arya',
+      ],
+      cluesLabel: 'Pistas',
+      // Texto bajo el contador, según cuántas pistas lleva
+      phases: [
+        'Sin pistas todavía',
+        'Algo huele raro...',
+        'Esto se pone interesante',
+        'Ya casi lo tengo',
+        'Solo falta una pieza',
+        'Hora de acusar (abre la libreta)',
+      ],
+      // Cada pista: nombre, lo que dice ella al encontrarla y lo que anota en la libreta
+      clues: {
+        pelos: { name: 'Pelitos naranjas', say: 'Pelitos naranjas... interesante.', note: 'El culpable es de color naranja.' },
+        huellas: { name: 'Huellas de patitas', say: 'Huellas con almohadillas. Nada de pezuñas.', note: 'Tiene patitas con almohadillas, no pezuñas.' },
+        foto: { name: 'Foto borrosa', say: 'Una foto: alguien de orejas largas.', note: 'Se ven unas orejas largas. No son puntudas.' },
+        babas: { name: 'Charco de babas', say: 'Guácala, babas. Muchas babas.', note: 'El culpable babea. Mucho.' },
+        envoltorio: { name: 'Envoltorio de gomitas', say: '¡Un paquete de gomitas vacío!', note: 'Alguien se comió un paquete entero.' },
+      },
+      unknownClue: '???',
+      unknownNote: 'Pista sin encontrar',
+      suspects: {
+        chif: { name: 'Chif', kind: 'zorrito' },
+        tiana: { name: 'Tiana', kind: 'ovejita en pijama' },
+        arya: { name: 'Arya', kind: 'tu fiel asistente' },
+      },
+      // Coartadas al interrogarlos
+      alibi: {
+        chif: 'Yo estaba en mi madriguera. Soy naranja, sí, ¡pero inocente!',
+        tiana: 'Beee... yo ya estaba en pijama. ¡Y tengo pezuñas!',
+      },
+      notAsked: 'Aún no lo has interrogado.',
+      // Lo que dicen si vuelves cuando ya tienes todas las pistas
+      hint: {
+        chif: 'Oye... esa perrita estuvo sentada MUCHO rato en el mismo sitio.',
+        tiana: 'Beee... ¿y quién más tiene orejas largas por aquí?',
+      },
+      aryaWhistle: '(silbidito inocente)',
+      aryaGuard: '¡Guau! (aquí no hay nada que ver)',
+      revealed: '¿Y eso que estaba tapando Arya?',
+      allClues: '¡Todas las pistas! Abre la libreta y acusa',
+      // Tablero de acusación
+      notesTitle: 'LIBRETA DE LA DETECTIVE',
+      suspectsTitle: 'SOSPECHOSOS',
+      accuse: 'ACUSAR',
+      close: 'CERRAR',
+      mystery: '???',
+      mysteryKind: 'Las pistas no cuadran con nadie...',
+      revealBtn: '¿QUIÉN FALTA?',
+      needClues: 'Te faltan pistas, detective. Sin pruebas no hay caso.',
+      defense: {
+        chif: '¡Protesto! Mis orejas son puntudas, y la foto muestra orejas largas.',
+        tiana: '¡Beee! Yo soy beige y tengo pezuñas. Mira los pelitos y las huellas.',
+      },
+      aryaRevealed: 'Naranjita, con patitas, orejas largas y babas... ¡¿ARYA?!',
+      // Escena final
+      endHer1: 'Arya... ¿qué hay en tu camita?',
+      endArya1: '(silbidito MUY inocente)',
+      endHer2: '¡¿PIPU?!',
+      endArya2: 'Guau... solo quería dormir con él.',
+      endPipu: '¡BUUURP!',
+      endHim: '¿Y mis gomitas? ¡Era un paquete entero!',
+      endArya3: '(silbidito otra vez)',
+      bigText: 'CASO CERRADO',
+      finalMessage: 'Pipu está vivo (y empachado de gomitas)',
+      finalNote: 'Arya queda en libertad condicional: solo quería dormir con él.',
+      wrongLabel: 'Acusaciones fallidas',
+    },
+
     // Interfaz
     gomitasLabel: 'Gomitas',
     heartsLabel: 'Corazoncitos',
@@ -97,6 +177,11 @@ export const CONFIG = {
     pantsShade: '#2a2e45',
     shoes: '#f25c54',
   },
+  // Arya (cocker), Chif (zorrito), Tiana (ovejita en pijama de conejo) y Pipu (pingüino)
+  arya: { coat: '#e08a3c', ears: '#b8662e', light: '#f8cf9c', nose: '#3a2420' },
+  chif: { coat: '#f07a2a', dark: '#5a3324', light: '#fff4e6', nose: '#3a2420' },
+  tiana: { pajama: '#e6cfa4', pajamaShade: '#c9ae80', earInside: '#f7a8b8', wool: '#ffffff', face: '#f6dcd0' },
+  pipu: { body: '#2b3350', belly: '#ffffff', beak: '#ffb02e', closedEyes: '#8f9bc4' },
 
   // ---------- Física (píxeles y segundos) ----------
   physics: {

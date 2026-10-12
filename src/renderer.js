@@ -5,15 +5,16 @@ import { buildSprites, makeCanvas } from './sprites.js';
 import { REACT_TIME } from './game.js';
 
 const SKY = ['#8ecbff', '#9ed4ff', '#afdcff', '#c1e5ff', '#d4ecff', '#e6f0ff', '#f6eefc', '#ffe9f3', '#ffdfeb'];
+const SKY_NIGHT = ['#3b3f8f', '#4347a0', '#4c52ae', '#5960bb', '#6a70c6', '#7d82d0', '#9391d8', '#ab9fde', '#c4ade2'];
 const BG_W = 512;
 
 export class Renderer {
   constructor(canvas, level, config) {
     this.cv = canvas;
     this.ctx = canvas.getContext('2d', { alpha: false });
-    this.level = level;
     this.S = buildSprites(config);
-    this.world = this.buildWorld();
+    this.worlds = {};
+    this.setLevel(level);
     this.far = this.buildHills(150, [[18, 2, 1], [9, 5, 2.3]], '#c9b6ee', '#ddd0f7', false);
     this.mid = this.buildHills(176, [[12, 3, 0.5], [5, 7, 4]], '#a6e3b8', '#c6f2cf', true);
     this.clouds = Array.from({ length: 8 }, (_, i) => ({
@@ -23,6 +24,14 @@ export class Renderer {
       x: 120 + i * 270 + hash2(i, 4) * 120, y: 120 + hash2(i, 5) * 50, c: i % 3, ph: hash2(i, 6) * 10,
     }));
     this.resize(320, 180);
+  }
+
+  // Cambia de nivel (la capa del mundo se dibuja una vez y se guarda).
+  setLevel(level) {
+    this.level = level;
+    this.night = level.theme === 'night';
+    this.world = this.worlds[level.id] || (this.worlds[level.id] = this.buildWorld());
+    this.stars = Array.from({ length: 46 }, (_, i) => ({ x: hash2(i, 31), y: hash2(i, 32) * 0.55, big: hash2(i, 33) > 0.8, ph: hash2(i, 34) * 6 }));
   }
 
   resize(w, h) {
@@ -161,15 +170,28 @@ export class Renderer {
     this.g = g; this.cx = cx; this.cy = cy; this.w = w; this.h = h;
 
     // Cielo en franjas
+    const night = this.night;
+    const sky = night ? SKY_NIGHT : SKY;
     const band = Math.ceil((h * 0.85) / SKY.length);
-    SKY.forEach((c, i) => {
+    sky.forEach((c, i) => {
       ctx.fillStyle = c;
       ctx.fillRect(0, i * band, w, i === SKY.length - 1 ? h : band);
     });
     // Sol
     const sx = Math.round(w * 0.8), sy = 30 - Math.round(cy * 0.05);
-    ctx.fillStyle = '#fff9dc'; this.disc(sx, sy, 15);
-    ctx.fillStyle = '#fff2b0'; this.disc(sx, sy, 11);
+    if (night) {
+      for (const st of this.stars) {
+        if (Math.sin(t * 1.5 + st.ph) < -0.6) continue; // titilan
+        const px = Math.round(st.x * w), py = Math.round(st.y * h);
+        if (st.big) this.spark(px, py, '#ffffff', false);
+        else { ctx.fillStyle = '#ffffff'; ctx.fillRect(px, py, 1, 1); }
+      }
+      ctx.fillStyle = '#ffffff'; this.disc(sx, sy, 13);
+      ctx.fillStyle = sky[0]; this.disc(sx + 6, sy - 3, 11); // luna creciente
+    } else {
+      ctx.fillStyle = '#fff9dc'; this.disc(sx, sy, 15);
+      ctx.fillStyle = '#fff2b0'; this.disc(sx, sy, 11);
+    }
 
     // Nubes y colinas con parallax
     for (const c of this.clouds) {
@@ -189,7 +211,9 @@ export class Renderer {
       else if (d.type === 'bush') { const s = this.S.bushes[d.variant]; ctx.drawImage(s, x - (s.width >> 1), d.y - cy - s.height + 2); }
     }
     this.garland(t);
-    ctx.drawImage(this.world, cx, cy, w, h, 0, 0, w, h);
+    const wh = Math.min(h, lvl.height - cy);
+    ctx.drawImage(this.world, cx, cy, w, wh, 0, 0, w, wh);
+    if (wh < h) { ctx.fillStyle = '#c1876b'; ctx.fillRect(0, wh, w, h - wh); } // más tierra bajo el nivel
     for (const d of lvl.decor) {
       const x = d.x - cx;
       if (x < -20 || x > w + 20) continue;
@@ -198,12 +222,41 @@ export class Renderer {
         ctx.drawImage(f.c, x - 3, d.y - cy - f.h + 1);
       } else if (d.type === 'tuft') ctx.drawImage(this.S.tuft.c, x - 3, d.y - cy - 3);
       else if (d.type === 'sign') ctx.drawImage(this.S.sign.c, x - 7, d.y - cy - 15);
+      else if (d.type === 'lamp') {
+        ctx.fillStyle = '#4a3a5a'; ctx.fillRect(x - 1, d.y - cy - 30, 2, 31); ctx.fillRect(x - 3, d.y - cy - 1, 6, 2);
+        ctx.fillRect(x - 3, d.y - cy - 38, 6, 2); ctx.fillRect(x - 4, d.y - cy - 31, 8, 2);
+      }
     }
+    // De noche: todo el paisaje se tiñe de azul; lo que brilla se dibuja después.
+    if (night) {
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = '#8f96dc';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+      for (const d of lvl.decor) {
+        if (d.type !== 'lamp') continue;
+        const x = d.x - cx;
+        if (x < -40 || x > w + 40) continue;
+        const y = d.y - cy - 34;
+        // halo suave del farol
+        ctx.fillStyle = '#fff3a6';
+        const flick = Math.floor(t * 3 + d.x) % 2;
+        ctx.globalAlpha = 0.1; this.disc(x, y, 26 + flick);
+        ctx.globalAlpha = 0.14; this.disc(x, y, 15);
+        ctx.globalAlpha = 0.2; this.disc(x, y, 7);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#fff3a6'; ctx.fillRect(x - 2, y - 2, 4, 5);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 1, 2, 3);
+      }
+    }
+    if (lvl.scene) this.crimeScene(lvl.scene);
     for (const b of this.butterflies) {
       const x = Math.round(b.x + Math.sin(t * 0.7 + b.ph) * 30 - cx);
       if (x < -10 || x > w + 10) continue;
       const y = Math.round(b.y + Math.sin(t * 1.9 + b.ph) * 9 - cy);
-      ctx.drawImage(this.S.butterflies[b.c][Math.floor(t * 8 + b.ph) % 2].c, x, y);
+      if (night) { // luciérnagas
+        if (Math.sin(t * 3 + b.ph) > -0.2) { ctx.fillStyle = '#fff3a6'; ctx.fillRect(x, y, 2, 2); }
+      } else ctx.drawImage(this.S.butterflies[b.c][Math.floor(t * 8 + b.ph) % 2].c, x, y);
     }
 
     // Honguitos
@@ -241,7 +294,27 @@ export class Renderer {
       }
     });
 
+    // Pistas del caso
+    (g.clues || []).forEach((c, i) => {
+      if (c.collected || c.hidden) return;
+      const x = c.x - cx;
+      if (x < -20 || x > w + 20) return;
+      const sp = this.S.clues[c.kind];
+      const y = Math.round(c.y + Math.sin(t * 2.6 + i * 1.3) * 2) - cy;
+      const gl = this.S.glow[Math.floor(t * 3 + i) % 2];
+      ctx.globalAlpha = 0.38;
+      ctx.drawImage(gl, x - (gl.width >> 1), y - (gl.height >> 1));
+      ctx.globalAlpha = 1;
+      ctx.drawImage(sp.c, x - (sp.w >> 1), y - (sp.h >> 1));
+      for (let k = 0; k < 3; k++) {
+        const a = t * 2.2 + (k * Math.PI * 2) / 3 + i;
+        if (Math.floor(t * 6 + k) % 3 === 0) continue;
+        this.spark(Math.round(x + Math.cos(a) * 12), Math.round(y + Math.sin(a) * 10), '#fff3a6', k === 0);
+      }
+    });
+    this.drawCase(g);
     this.drawHim(g);
+    this.drawArya(g);
     this.drawHer(g);
     if (g.ending && g.ending.love) {
       const mx = Math.round((g.player.x + g.npc.x) / 2) - cx;
@@ -258,14 +331,14 @@ export class Renderer {
       if (x1 < 0 || x0 > w) continue;
       const wy = lvl.waterY - cy;
       const a = Math.max(0, x0), b = Math.min(w, x1);
-      ctx.fillStyle = '#7fc8f8'; ctx.fillRect(a, wy + 1, b - a, h - wy);
-      ctx.fillStyle = '#62b3ee'; ctx.fillRect(a, wy + 12, b - a, h - wy);
+      ctx.fillStyle = night ? '#5a78d6' : '#7fc8f8'; ctx.fillRect(a, wy + 1, b - a, h - wy);
+      ctx.fillStyle = night ? '#4660bd' : '#62b3ee'; ctx.fillRect(a, wy + 12, b - a, h - wy);
       for (let x = a; x < b; x += 4) {
         const wx = x + cx;
         const o = Math.round(Math.sin(wx / 9 + t * 2.4) * 1.2);
-        ctx.fillStyle = '#d6f1ff'; ctx.fillRect(x, wy + o, Math.min(4, b - x), 1);
-        ctx.fillStyle = '#a5dcff'; ctx.fillRect(x, wy + o + 1, Math.min(4, b - x), 1);
-        if (hash2(Math.floor(wx / 4), 77) > 0.86) { ctx.fillStyle = '#b9e6ff'; ctx.fillRect(x, wy + 7 + (Math.floor(t * 2 + wx) % 3), 3, 1); }
+        ctx.fillStyle = night ? '#c9d6ff' : '#d6f1ff'; ctx.fillRect(x, wy + o, Math.min(4, b - x), 1);
+        ctx.fillStyle = night ? '#8ea6f0' : '#a5dcff'; ctx.fillRect(x, wy + o + 1, Math.min(4, b - x), 1);
+        if (hash2(Math.floor(wx / 4), 77) > 0.86) { ctx.fillStyle = night ? '#8ea6f0' : '#b9e6ff'; ctx.fillRect(x, wy + 7 + (Math.floor(t * 2 + wx) % 3), 3, 1); }
       }
     }
 
@@ -302,6 +375,7 @@ export class Renderer {
   // Guirnalda de corazones de la zona final
   garland(t) {
     const gl = this.level.garland;
+    if (!gl) return;
     const ctx = this.ctx;
     const x1 = gl.x1 - this.cx, x2 = gl.x2 - this.cx;
     if (x2 < -10 || x1 > this.w + 10) return;
@@ -382,6 +456,7 @@ export class Renderer {
   // ---------- Él ----------
   drawHim(g) {
     const n = g.npc;
+    if (n.hidden) return;
     const S = this.S.him;
     const t = g.time;
     const dist = Math.abs(g.player.x - n.x);
@@ -411,7 +486,96 @@ export class Renderer {
     ctx.drawImage(S.torso[torso][k], x, top + 8);
     ctx.drawImage(S.head[k], x, top);
     ctx.drawImage(S.faces[face][k], x + 4, top + 5);
-    ctx.drawImage(this.S.bag[k], x + (flip ? 16 - bag[0] - 9 : bag[0]), top + bag[1]);
+    // En el caso de Pipu llega con las manos vacías: se comieron el paquete.
+    if (g.mode !== 'pipu') ctx.drawImage(this.S.bag[k], x + (flip ? 16 - bag[0] - 9 : bag[0]), top + bag[1]);
+  }
+
+  // ---------- Arya ----------
+  drawArya(g) {
+    const a = g.arya;
+    const S = this.S.arya;
+    const t = g.time;
+    let frame = 'stand';
+    if (a.sit) frame = 'sit';
+    else if (a.moving) frame = Math.floor(t * 11) % 2 ? 'run1' : 'run2';
+    else if (Math.floor(t * 6) % 2) frame = 'wag';
+    const hop = a.hopT > 0 ? -Math.round(Math.abs(Math.sin(a.hopT * 9)) * 5) : 0;
+    if (hop < 0) frame = 'run1';
+    const flip = a.facing < 0;
+    const x = Math.round(a.x) - 9 - this.cx;
+    const y = Math.round(a.y) - 13 - this.cy + hop;
+    if (x < -30 || x > this.w + 30) return;
+    const ctx = this.ctx;
+    ctx.drawImage(S[frame][flip ? 'f' : 'c'], x, y);
+    if (a.guiltyT > 0 || (a.override && a.override.sit)) {
+      // gotita de "yo no fui"
+      const sx = x + (flip ? 3 : 14), sy = y - 1 + (Math.floor(t * 4) % 3);
+      ctx.fillStyle = '#8fd3ff'; ctx.fillRect(sx, sy, 1, 2);
+      ctx.fillStyle = '#e6f6ff'; ctx.fillRect(sx, sy, 1, 1);
+      if (Math.floor(t * 2) % 2) ctx.drawImage(this.S.note.c, x + (flip ? -4 : 19), y - 4 - (Math.floor(t * 5) % 2));
+    }
+  }
+
+  // ---------- El caso: escena del crimen, sospechosos y camita ----------
+  crimeScene(sc) {
+    const ctx = this.ctx;
+    const x = sc.x - this.cx, y = sc.y - this.cy;
+    if (x < -70 || x > this.w + 70) return;
+    const ch = this.S.chalk;
+    ctx.drawImage(ch, x - (ch.width >> 1), y - ch.height + 1);
+    // cinta amarilla entre dos postes
+    for (const px of [x - 30, x + 30]) {
+      ctx.fillStyle = '#6e4535'; ctx.fillRect(px - 1, y - 20, 2, 21);
+      ctx.fillStyle = '#ffd23f'; ctx.fillRect(px - 2, y - 22, 4, 3);
+    }
+    for (let i = -29; i < 29; i++) {
+      const sag = Math.round(Math.sin(((i + 29) / 58) * Math.PI) * 3);
+      ctx.fillStyle = Math.floor((i + 30) / 4) % 2 ? '#3b2244' : '#ffd23f';
+      ctx.fillRect(x + i, y - 19 + sag, 1, 3);
+    }
+  }
+
+  drawCase(g) {
+    const lvl = this.level;
+    if (!lvl.bed) return;
+    const ctx = this.ctx;
+    const t = g.time;
+    for (const id in g.suspects) {
+      const s = g.suspects[id];
+      const sp = this.S[id];
+      const x = Math.round(s.x) - (sp.w >> 1) - this.cx;
+      if (x < -30 || x > this.w + 30) continue;
+      const bob = g.bubbles[id] ? Math.floor(t * 6) % 2 : Math.floor(t * 1.6 + s.x) % 2 ? 0 : 0;
+      // Dibujados mirando a la derecha; se voltean hacia la detective.
+      ctx.drawImage(sp[s.facing < 0 ? 'f' : 'c'], x, Math.round(s.y) - sp.h - this.cy - bob);
+    }
+    // Camita de Arya
+    const bx = lvl.bed.x - this.cx, by = lvl.bed.y - this.cy;
+    if (bx < -40 || bx > this.w + 40) return;
+    const P = g.pipu;
+    if (P.state !== 'hidden') {
+      const awake = P.state === 'awake';
+      const hop = awake ? -Math.round(Math.abs(Math.sin(P.t * 5)) * 7) - 4 : 0;
+      const sp = this.S.pipu[awake ? 'awake' : 'sleep'];
+      ctx.drawImage(sp.c, bx - 7, by - (awake ? 16 : 13) + hop);
+    }
+    ctx.fillStyle = '#c2337a'; ctx.fillRect(bx - 16, by - 3, 32, 4);
+    ctx.fillStyle = '#ff8fbd'; ctx.fillRect(bx - 17, by - 6, 34, 4);
+    ctx.fillStyle = '#ffc2da'; ctx.fillRect(bx - 16, by - 7, 32, 1);
+    ctx.fillStyle = '#c2337a'; ctx.fillRect(bx - 18, by - 5, 1, 4); ctx.fillRect(bx + 17, by - 5, 1, 4);
+    if (P.state === 'hidden') {
+      // el bulto sospechoso bajo la cobija (respira)
+      const up = Math.floor(t * 1.3) % 2;
+      ctx.fillStyle = '#b9a3e3';
+      for (let dy = 0; dy < 9 + up; dy++) {
+        const half = Math.round(Math.sqrt(1 - (dy / (9 + up)) ** 2) * 9);
+        ctx.fillRect(bx - half, by - 7 - dy, half * 2, 1);
+      }
+      ctx.fillStyle = '#d6c7f2'; ctx.fillRect(bx - 4, by - 14 - up, 5, 1); ctx.fillRect(bx - 6, by - 12 - up, 2, 1);
+    } else if (P.state === 'sleep') {
+      ctx.fillStyle = '#b9a3e3'; ctx.fillRect(bx - 12, by - 8, 24, 3);
+      ctx.fillStyle = '#d6c7f2'; ctx.fillRect(bx - 12, by - 9, 24, 1);
+    }
   }
 
   // ---------- Partículas ----------
@@ -428,6 +592,9 @@ export class Renderer {
       } else if (p.type === 'spark') {
         if (k < 0.3 && Math.floor(g.time * 24) % 2) continue;
         this.spark(x, y, p.color || '#ffffff', k > 0.6);
+      } else if (p.type === 'zzz' || p.type === 'note') {
+        if (k < 0.25 && Math.floor(g.time * 16) % 2) continue;
+        ctx.drawImage(this.S[p.type].c, x - 1, y - 1);
       } else if (p.type === 'splash') {
         ctx.fillStyle = k > 0.5 ? '#d6f1ff' : '#a5dcff';
         ctx.fillRect(x, y, 2, 2);

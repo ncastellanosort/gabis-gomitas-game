@@ -53,15 +53,11 @@ export function search(level, physics, from, isGoal, { minX = -Infinity, maxX = 
 
 export const touches = (g) => (p) => Math.abs(p.x - g.x) < 12 && Math.abs(p.y - HEIGHT / 2 - g.y) < 17;
 
-// Ruta completa: inicio → cada gomita en orden → meta.
-export function solveRoute(level, physics) {
+// Ruta por una lista de objetivos { name, x, test } en orden.
+export function solveTargets(level, physics, targets) {
   const p = new Player(level, physics);
   let state = snap(p);
   const legs = [];
-  const targets = [
-    ...level.gomitas.map((g, i) => ({ name: `gomita ${i + 1}`, x: g.x, test: touches(g) })),
-    { name: 'meta', x: level.goalX, test: (q) => q.x >= level.goalX && q.onGround },
-  ];
   for (const t of targets) {
     const x0 = state[0];
     const res = search(level, physics, state, t.test, { minX: Math.min(x0, t.x) - 260, maxX: Math.max(x0, t.x) + 260 });
@@ -70,4 +66,12 @@ export function solveRoute(level, physics) {
     state = res.end;
   }
   return { ok: true, legs, inputs: legs.flatMap((l) => l.inputs) };
+}
+
+// Nivel 1 completo: inicio → cada gomita en orden → meta.
+export function solveRoute(level, physics) {
+  return solveTargets(level, physics, [
+    ...level.gomitas.map((g, i) => ({ name: `gomita ${i + 1}`, x: g.x, test: touches(g) })),
+    { name: 'meta', x: level.goalX, test: (q) => q.x >= level.goalX && q.onGround },
+  ]);
 }

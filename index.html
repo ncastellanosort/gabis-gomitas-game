@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#8ecbff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Gomitas of Love</title>
+  <title>Gabis Hunger Games</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6' shape-rendering='crispEdges'%3E%3Cpath fill='%23ff4d6d' d='M1 0h2v1h1V0h2v1h1v2H6v1H5v1H4v1H3V5H2V4H1V3H0V1h1z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="state-title">
   <div id="app">
     <div id="stage">
-      <canvas id="game" aria-label="Gomitas of Love: juego de plataformas"></canvas>
+      <canvas id="game" aria-label="Gabis Hunger Games: juego de plataformas"></canvas>
 
       <!-- Globos de diálogo -->
       <div class="bubble" id="bubble-her" hidden></div>
@@ -33,6 +33,9 @@
         </div>
         <div class="hud-right">
           <span class="panel hearts" id="hearts-box"><i class="pix-heart"></i><span id="hearts-text">0</span></span>
+          <button class="icon-btn notes" id="btn-notes" aria-label="Libreta de la detective" hidden>
+            <svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M2 0h5v8H2V7H1V6h1V5H1V4h1V3H1V2h1zM3 2v1h3V2zM3 4v1h3V4z"/></svg>
+          </button>
           <button class="icon-btn" id="btn-pause" aria-label="Pausa">
             <svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M1 1h2v6H1zM5 1h2v6H5z"/></svg>
           </button>
@@ -52,9 +55,12 @@
 
       <!-- Pantalla de inicio -->
       <section class="screen" id="screen-title">
-        <h1 class="logo"><canvas class="logo-gomita" width="12" height="14"></canvas><span id="title-text">Gomitas of Love</span><canvas class="logo-gomita" width="12" height="14"></canvas></h1>
+        <h1 class="logo"><canvas class="logo-gomita" width="12" height="14"></canvas><span id="title-text">Gabis Hunger Games</span><canvas class="logo-gomita" width="12" height="14"></canvas></h1>
         <p class="subtitle" id="subtitle"></p>
-        <button class="btn big" id="btn-play">JUGAR</button>
+        <div class="levels">
+          <button class="btn level" id="btn-level1" data-level="gomitas"><span class="lv-tag"></span><span class="lv-name"></span><span class="lv-desc"></span></button>
+          <button class="btn alt level" id="btn-level2" data-level="pipu"><span class="lv-tag"></span><span class="lv-name"></span><span class="lv-desc"></span></button>
+        </div>
         <p class="hint" id="hint"></p>
         <p class="hint rotate" id="rotate-hint"></p>
       </section>
@@ -66,6 +72,23 @@
           <button class="btn" id="btn-resume">CONTINUAR</button>
           <button class="btn alt" id="btn-restart2">REINICIAR</button>
           <button class="btn alt" id="btn-sound2">SONIDO</button>
+          <button class="btn alt" id="btn-menu">MENÚ</button>
+        </div>
+      </section>
+
+      <!-- Libreta de la detective (nivel 2) -->
+      <section class="screen dim" id="screen-notes" hidden>
+        <div class="panel card notes-card">
+          <h2 id="notes-title"></h2>
+          <div class="notes-cols">
+            <ul id="clue-list" class="scrolly"></ul>
+            <div class="suspects scrolly">
+              <h3 id="suspects-title"></h3>
+              <div id="suspect-list"></div>
+            </div>
+          </div>
+          <p id="notes-msg" aria-live="polite"></p>
+          <button class="btn" id="btn-notes-close"></button>
         </div>
       </section>
 
@@ -78,7 +101,10 @@
             <p class="note" id="final-note"></p>
             <p class="stats" id="final-stats"></p>
           </div>
-          <button class="btn big" id="btn-replay">VOLVER A JUGAR</button>
+          <div class="win-btns">
+            <button class="btn big" id="btn-replay">VOLVER A JUGAR</button>
+            <button class="btn alt" id="btn-menu2">MENÚ</button>
+          </div>
         </div>
       </section>
 

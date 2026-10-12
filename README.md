@@ -1,8 +1,13 @@
-# Gomitas of Love
+# Gabis Hunger Games
 
-Mini videojuego de plataformas en pixel art. Ella empieza brava, va encontrando
-gomitas por un jardín encantado y con cada una se le va pasando el enojo, hasta
-la escena final.
+Mini videojuego de plataformas en pixel art, con dos niveles:
+
+- **Nivel 1 · Gomitas of Love** (para cuando esté brava). Ella empieza brava, va
+  encontrando gomitas por un jardín encantado y con cada una se le va pasando
+  el enojo, hasta la escena final.
+- **Nivel 2 · El asesinato de Pipu**. La detective recorre el jardín de noche,
+  reúne 5 pistas, interroga a Chif y a Tiana y acusa al culpable desde su
+  libreta. Arya, su perrita, la acompaña en los dos niveles.
 
 Sin dependencias: HTML, CSS y JavaScript con Canvas 2D. Los sprites, los efectos
 de sonido y la música se generan desde el código.
@@ -28,6 +33,7 @@ módulos de JavaScript en archivos locales.
 | --- | --- | --- |
 | Moverse | ← → o A / D | Botones ◀ ▶ |
 | Saltar (mantener = salto más alto) | Espacio, W o ↑ | Botón SALTAR |
+| Libreta de la detective (nivel 2) | L o E | Botón de libreta |
 | Pausa | P o Esc | Botón de pausa |
 | Silenciar | M | Botón de sonido |
 
@@ -38,10 +44,13 @@ funciona en Android; en iPhone, Safari no lo permite.
 
 Todo lo que se cambia a menudo está en `src/config.js`:
 
+- `texts.title`, `texts.levels`: el nombre del juego y de cada nivel en el menú.
+- `texts.pipu`: todo el nivel 2 (pistas, coartadas, defensas, escena final).
+- `arya`, `chif`, `tiana`, `pipu`: colores de los animales.
 - `texts.finalMessage`: el mensaje final («Gracias por jugar conmigo, mi crespita hermosa»).
 - `texts.bigText`: el texto grande de la escena final.
 - `texts.finalNote`, `texts.endingAsk`, `texts.endingReply`: el resto de la escena final.
-- `texts.title`, `texts.subtitle`: pantalla de inicio.
+- `texts.subtitle`: la frase bajo el título.
 - `texts.intro`: los avisos del comienzo.
 - `texts.pickup`: lo que dice ella con cada gomita.
 - `texts.moods`: el indicador emocional (un texto por estado).
@@ -50,9 +59,9 @@ Todo lo que se cambia a menudo está en `src/config.js`:
 - `physics`: velocidad, altura de salto, gravedad.
 - `audio`: volumen, música sí/no, empezar en silencio.
 
-El nivel (plataformas, gomitas, corazoncitos, honguitos) está en `src/level.js`.
-Si lo cambias, ejecuta `npm test`: comprueba con la física real que todas las
-gomitas y la meta siguen siendo alcanzables.
+Los niveles (plataformas, gomitas, pistas, corazoncitos, honguitos) están en
+`src/levels/`. Si cambias uno, ejecuta `npm test`: comprueba con la física real
+que todas las gomitas, las pistas y la meta siguen siendo alcanzables.
 
 ## Estructura
 
@@ -62,9 +71,10 @@ style.css         interfaz, diseño adaptable y controles táctiles
 server.mjs        servidor local mínimo (npm start)
 src/config.js     textos, colores y ajustes personalizables
 src/main.js       arranque, interfaz, estados (inicio, pausa, final)
-src/game.js       lógica: gomitas, emociones, encuentros, escena final, cámara
+src/game.js       lógica: gomitas, emociones, pistas, sospechosos, Arya, finales
 src/player.js     movimiento, salto, gravedad y colisiones
-src/level.js      plataformas, gomitas y decoración
+src/level.js      base común de los niveles (casillas, decoración)
+src/levels/       gomitas.js (nivel 1) y pipu.js (nivel 2)
 src/sprites.js    pixel art de personajes y objetos
 src/renderer.js   dibujo del mundo, fondos y partículas
 src/audio.js      efectos de sonido y música (Web Audio)

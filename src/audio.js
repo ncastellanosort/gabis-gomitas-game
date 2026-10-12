@@ -21,6 +21,17 @@ const SONGS = {
       'C3 . G3 . C3 . G3 .', 'G2 . D3 . G2 . D3 .', 'F2 . C3 . G2 . D3 .', 'C3 . G3 . C3 - . .',
     ] },
   },
+  mystery: {
+    bpm: 96,
+    lead: { wave: 'square', vol: 0.4, bars: [
+      'A4 . C5 . E5 . C5 .', 'A4 . C5 . F5 - E5 .', 'D5 . F5 . A5 . F5 .', 'E5 - D5 - C5 - B4 .',
+      'A4 . C5 . E5 . C5 .', 'A4 . C5 . F5 - E5 .', 'D5 . E5 . F5 . G#5 .', 'A5 - - . E5 . A4 .',
+    ] },
+    bass: { wave: 'triangle', vol: 0.9, bars: [
+      'A2 . E3 . A2 . E3 .', 'F2 . C3 . F2 . C3 .', 'D3 . A3 . D3 . A3 .', 'E2 . B2 . E3 . B2 .',
+      'A2 . E3 . A2 . E3 .', 'F2 . C3 . F2 . C3 .', 'D3 . A3 . E2 . B2 .', 'A2 . E3 . A2 - . .',
+    ] },
+  },
   love: {
     bpm: 80,
     lead: { wave: 'triangle', vol: 1, bars: [
@@ -152,6 +163,12 @@ export class AudioKit {
         this.arp(['G5', 'C6', 'E6', 'G6'], 0.11, 0.2, { wave: 'triangle', vol: 0.3 });
         this.arp(['C6', 'E6', 'G6', 'C7'], 0.11, 0.5, { wave: 'square', vol: 0.12, at: 0.44 });
         break;
+      case 'clue': this.arp(['A5', 'C6', 'E6', 'A6'], 0.07, 0.14, { vol: 0.22 }); this.arp(['E7'], 0, 0.25, { wave: 'triangle', vol: 0.18, at: 0.3 }); break;
+      case 'reveal': this.arp(['E6', 'G#6', 'B6'], 0.06, 0.18, { wave: 'triangle', vol: 0.22 }); break;
+      case 'bark': this.tone(420, 300, 0.07, { vol: 0.2 }); this.tone(480, 330, 0.08, { vol: 0.2, at: 0.13 }); this.noise(0.06, { vol: 0.12, f0: 1500, f1: 600 }); break;
+      case 'burp': this.tone(150, 70, 0.4, { wave: 'sawtooth', vol: 0.3 }); this.tone(95, 60, 0.4, { wave: 'square', vol: 0.12 }); break;
+      case 'wrong': this.arp(['E5', 'C5', 'A4'], 0.1, 0.16, { vol: 0.2 }); break;
+      case 'page': this.noise(0.09, { vol: 0.14, f0: 3000, f1: 900 }); break;
       case 'love':
         this.arp(['C5', 'E5', 'G5', 'C6', 'E6', 'G6', 'C7'], 0.08, 0.5, { wave: 'triangle', vol: 0.26 });
         break;

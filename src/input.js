@@ -22,6 +22,7 @@ export class Input {
       } else if (!e.repeat) {
         if (e.code === 'KeyP' || e.code === 'Escape') this.onAction('pause');
         else if (e.code === 'KeyM') this.onAction('mute');
+        else if (e.code === 'KeyL' || e.code === 'KeyE') this.onAction('notes');
       }
     });
     this.on(window, 'keyup', (e) => {

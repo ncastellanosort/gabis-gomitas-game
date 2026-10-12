@@ -2,12 +2,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CONFIG } from '../src/config.js';
-import { createLevel, TILE } from '../src/level.js';
+import { TILE } from '../src/level.js';
+import { createGomitasLevel } from '../src/levels/gomitas.js';
+import { createPipuLevel } from '../src/levels/pipu.js';
 import { Player } from '../src/player.js';
 import { Game, STEP } from '../src/game.js';
-import { solveRoute, search, snap, touches } from './solver.mjs';
+import { solveRoute, solveTargets, search, snap, touches } from './solver.mjs';
 
-const level = createLevel();
+const level = createGomitasLevel();
+const pipu = createPipuLevel();
 const NONE = { left: false, right: false, jump: false };
 const run = (game, input, seconds) => { for (let i = 0; i < seconds / STEP; i++) game.step(STEP, input); };
 
@@ -136,4 +139,107 @@ test('una gomita no se recoge dos veces y caer al agua no quita gomitas', () => 
   run(game, NONE, 2);
   assert.equal(game.count, 1, 'conserva las gomitas');
   assert.ok(game.player.y <= 12 * TILE && game.player.onGround, 'reaparece sobre el suelo');
+});
+
+// ------------------------------------------------------------
+// Nivel 2 · El asesinato de Pipu
+// ------------------------------------------------------------
+// Llegar y quedarse quieta (para poder esperar sin alterar la ruta).
+const nearX = (x, r) => (p) => Math.abs(p.x - x) < r && p.onGround && Math.abs(p.vx) < 1 && !p.jumpHeld;
+let caseRoute;
+test('nivel 2: todas las pistas son alcanzables (incluida la que tapa Arya)', () => {
+  const [pelos, huellas, foto, babas, envoltorio] = pipu.clues;
+  caseRoute = solveTargets(pipu, CONFIG.physics, [
+    { name: 'pelos', x: pelos.x, test: touches(pelos) },
+    { name: 'huellas', x: huellas.x, test: touches(huellas) },
+    { name: 'foto', x: foto.x, test: touches(foto) },
+    { name: 'acercarse a las babas', x: babas.x, test: nearX(babas.x - 40, 12) },
+    { name: 'alejarse', x: babas.x - 150, test: nearX(babas.x - 150, 12) },
+    { name: 'babas', x: babas.x, test: touches(babas) },
+    { name: 'envoltorio', x: envoltorio.x, test: touches(envoltorio) },
+  ]);
+  assert.ok(caseRoute.ok, `tramo imposible: ${caseRoute.failed}`);
+});
+
+test('nivel 2: se puede volver atrás desde el final hasta cada pista', () => {
+  const p = new Player(pipu, CONFIG.physics);
+  p.reset(pipu.bed.x - 60, 12 * TILE);
+  let state = snap(p);
+  for (const c of [...pipu.clues].reverse()) {
+    const res = search(pipu, CONFIG.physics, state, touches(c), { minX: c.x - 260, maxX: state[0] + 260 });
+    assert.ok(res, `no se puede volver a la pista ${c.kind}`);
+    state = res.end;
+  }
+});
+
+test('nivel 2: caso completo, acusaciones y final', () => {
+  const events = [];
+  const game = new Game(CONFIG, pipu, (name, data) => events.push({ name, data }));
+  game.start();
+  assert.equal(game.npc.hidden, true, 'él no aparece hasta el final');
+  assert.deepEqual(game.accuse('arya'), { ok: false, text: CONFIG.texts.pipu.needClues }, 'sin pistas no se puede acusar a Arya');
+  assert.equal(game.accuse('chif').ok, false);
+  assert.equal(game.wrong, 0, 'acusar sin pistas no cuenta como fallo');
+
+  let hiddenTaken = false;
+  for (const leg of caseRoute.legs) {
+    for (const input of leg.inputs) game.step(STEP, input);
+    if (leg.name === 'acercarse a las babas') {
+      run(game, NONE, 3); // Arya corre a sentarse encima
+      const babas = game.clues[3];
+      assert.ok(babas.sat && babas.hidden, 'Arya tapa la pista');
+      assert.ok(Math.abs(game.arya.x - babas.x) < 3 && game.arya.sit, 'Arya está sentada sobre la pista');
+      game.collectClue(babas);
+      hiddenTaken = hiddenTaken || babas.collected;
+    }
+    if (leg.name === 'alejarse') assert.equal(game.clues[3].hidden, false, 'al alejarse, Arya se levanta y la pista aparece');
+  }
+  assert.ok(!hiddenTaken, 'la pista tapada no se puede recoger');
+  assert.equal(game.count, 5, 'recoge las 5 pistas');
+  assert.equal(events.filter((e) => e.name === 'clue').length, 5);
+  assert.equal(events.filter((e) => e.name === 'allClues').length, 1);
+  assert.ok(game.suspects.chif.spoken && game.suspects.tiana.spoken, 'los dos sospechosos dieron su coartada');
+  assert.equal(game.state, 'playing', 'el caso no se cierra solo');
+
+  // Acusaciones falsas: se defienden y cuentan como fallo.
+  assert.equal(game.accuse('chif').text, CONFIG.texts.pipu.defense.chif);
+  assert.equal(game.accuse('tiana').ok, false);
+  assert.equal(game.wrong, 2);
+  assert.equal(game.state, 'playing');
+  assert.equal(game.accuse('arya').ok, true);
+
+  game.startCaseEnding();
+  game.startCaseEnding();
+  assert.equal(game.state, 'ending');
+  run(game, { left: true, jump: true }, 6);
+  assert.equal(game.pipu.state, 'sleep', 'Pipu aparece dormido en la camita');
+  run(game, NONE, 16);
+  assert.equal(game.state, 'won');
+  assert.equal(game.pipu.state, 'awake', 'Pipu está vivo');
+  assert.equal(game.npc.hidden, false, 'él llega preguntando por sus gomitas');
+  assert.equal(events.filter((e) => e.name === 'endingStart').length, 1, 'final una sola vez');
+  assert.equal(events.filter((e) => e.name === 'won').length, 1);
+  assert.equal(events.find((e) => e.name === 'won').data.wrong, 2);
+  assert.equal(game.accuse('arya').ok, false, 'no se puede acusar otra vez');
+
+  game.start();
+  assert.equal(game.count, 0);
+  assert.equal(game.pipu.state, 'hidden');
+  assert.ok(game.clues.every((c) => !c.collected) && game.clues[3].hidden);
+});
+
+test('Arya acompaña en los dos niveles sin quedarse atrás', () => {
+  for (const [lvl, inputs] of [[level, route.inputs], [pipu, caseRoute.inputs]]) {
+    const game = new Game(CONFIG, lvl);
+    game.start();
+    let far = 0;
+    let busy = 0; // tras sus travesuras, Arya tiene un par de segundos para alcanzarla
+    for (const input of inputs) {
+      game.step(STEP, input);
+      if (game.state !== 'playing') break;
+      busy = game.arya.override ? 2 : busy - STEP;
+      if (busy <= 0 && game.respawnT <= 0) far = Math.max(far, Math.hypot(game.arya.x - game.player.x, game.arya.y - game.player.y));
+    }
+    assert.ok(far < 60, `Arya se alejó ${far.toFixed(0)}px en ${lvl.id}`);
+  }
 });

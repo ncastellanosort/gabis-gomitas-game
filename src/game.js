@@ -1,5 +1,5 @@
-// Lógica del juego: estados, gomitas, emociones, encuentros con él,
-// partículas, cámara y escena final. No toca el DOM: avisa de lo que pasa
+// Lógica del juego: estados, gomitas y emociones (nivel 1), pistas y
+// sospechosos (nivel 2), Arya, partículas, cámara y escenas finales. No toca el DOM: avisa de lo que pasa
 // mediante `emit(nombre, datos)` y main.js se encarga de sonido e interfaz.
 
 import { Player, HEIGHT } from './player.js';
@@ -14,6 +14,7 @@ export class Game {
     this.config = config;
     this.level = level;
     this.emit = emit;
+    this.mode = level.id; // 'gomitas' | 'pipu'
     this.view = { w: 320, h: 180 };
     this.player = new Player(level, config.physics);
     this.reset();
@@ -34,16 +35,24 @@ export class Game {
     this.player.reactT = 0;
     this.player.cheer = false;
     this.gomitas = lvl.gomitas.map((g) => ({ ...g, collected: false }));
+    this.clues = (lvl.clues || []).map((c) => ({ ...c, collected: false, sat: false, sitT: 0 }));
+    this.suspects = Object.fromEntries(Object.entries(lvl.suspects || {}).map(([id, s]) => [id, { ...s, spoken: false, hinted: false, facing: -1 }]));
+    this.wrong = 0;
+    this.pipu = { state: 'hidden', t: 0 };
+    this.guardCd = 0;
     this.hearts = lvl.hearts.map((h) => ({ ...h, collected: false }));
     this.count = 0;
     this.heartCount = 0;
-    this.mood = 0;
+    this.mood = this.mode === 'pipu' ? 3 : 0;
     this.particles = [];
-    this.bubbles = { her: null, him: null };
+    this.bubbles = {};
     this.bubbleSeq = 0;
     this.springAnim = lvl.springs.map(() => 0);
-    this.npc = { spot: 0, x: 0, y: 0, facing: -1, state: 'idle', t: 0, cheerT: 0, spoken: false, love: false };
-    this.placeNpc(0);
+    this.npc = { spot: 0, x: lvl.start.x, y: lvl.start.y, facing: -1, state: 'idle', t: 0, cheerT: 0, spoken: false, love: false, hidden: this.mode !== 'gomitas' };
+    if (this.mode === 'gomitas') this.placeNpc(0);
+    this.arya = { x: lvl.start.x - 22, y: lvl.start.y, facing: 1, moving: false, air: false, sit: false, idleT: 0, hopT: 0, guiltyT: 0, override: null };
+    this.trail = [{ x: this.arya.x, y: this.arya.y, air: false }];
+    this.idleT = 0;
     this.ending = null;
     this.respawnT = 0;
     this.invulnT = 0;
@@ -60,7 +69,7 @@ export class Game {
   }
 
   get total() {
-    return this.gomitas.length;
+    return this.mode === 'pipu' ? this.clues.length : this.gomitas.length;
   }
 
   // ------------------------------------------------------------
@@ -80,22 +89,28 @@ export class Game {
         this.handlePlayerEvents();
         this.checkPickups();
         this.checkFall();
-        this.checkGoal();
+        if (this.mode === 'gomitas') this.checkGoal();
+        else this.checkClues();
       }
-      if (this.state === 'playing') this.updateNpc(dt);
+      if (this.state === 'playing') {
+        if (this.mode === 'gomitas') this.updateNpc(dt);
+        else this.updateCase(dt);
+      }
     } else if (this.state === 'ending' || this.state === 'won') {
-      this.updateEnding(dt);
+      if (this.mode === 'gomitas') this.updateEnding(dt);
+      else this.updateCaseEnding(dt);
     } else {
       pl.update(dt, NO_INPUT);
       pl.events.length = 0;
       this.npc.facing = -1;
     }
 
+    this.updateArya(dt);
     this.updateMoodFx(dt);
     this.updateParticles(dt);
-    for (const who of ['her', 'him']) {
+    for (const who in this.bubbles) {
       const b = this.bubbles[who];
-      if (b && (b.t -= dt) <= 0) this.bubbles[who] = null;
+      if (b && (b.t -= dt) <= 0) delete this.bubbles[who];
     }
     for (let i = 0; i < this.springAnim.length; i++) this.springAnim[i] = Math.max(0, this.springAnim[i] - dt);
     this.updateCamera(dt, false);
@@ -152,6 +167,7 @@ export class Game {
     const lines = this.config.texts.pickup;
     this.say('her', lines[Math.min(this.count - 1, lines.length - 1)], 3);
     if (Math.abs(this.npc.x - this.player.x) < 260) this.npc.cheerT = 1.4;
+    this.arya.hopT = 0.7;
     this.emit('gomita', { count: this.count, total: this.total, mood: this.mood });
     if (this.count === this.total) this.emit('allGomitas');
   }
@@ -172,6 +188,10 @@ export class Game {
     pl.reset(safeX, safeY);
     Object.assign(pl, keep);
     pl.facing = facing;
+    // Arya reaparece con ella.
+    this.arya.x = safeX - facing * 18;
+    this.arya.y = safeY;
+    this.trail = [{ x: this.arya.x, y: this.arya.y, air: false }];
     this.invulnT = 1;
     this.burst('puff', safeX, safeY - 10, 8, { speed: 40 });
     this.emit('respawn');
@@ -255,7 +275,7 @@ export class Game {
     const last = this.level.npcSpots.length - 1;
     if (this.npc.spot !== last || this.npc.state !== 'idle') this.placeNpc(last);
     this.npc.cheerT = 0;
-    this.bubbles.her = this.bubbles.him = null;
+    this.bubbles = {};
     this.emit('endingStart');
   }
 
@@ -318,7 +338,248 @@ export class Game {
     }
     if (e.t > 9 && this.state === 'ending') {
       this.state = 'won';
-      this.emit('won', { count: this.count, total: this.total, hearts: this.heartCount, heartsTotal: this.hearts.length });
+      this.emit('won', { mode: 'gomitas', count: this.count, total: this.total, hearts: this.heartCount, heartsTotal: this.hearts.length });
+    }
+  }
+
+
+  // ------------------------------------------------------------
+  // Arya la acompaña siempre: sigue el mismo camino, un poquito atrás.
+  updateArya(dt) {
+    const a = this.arya;
+    const pl = this.player;
+    const tr = this.trail;
+    const last = tr[tr.length - 1];
+    if (Math.hypot(pl.x - last.x, pl.y - last.y) >= 2) tr.push({ x: pl.x, y: pl.y, air: !pl.onGround });
+    if (tr.length > 700) tr.shift();
+    this.idleT = pl.onGround && Math.abs(pl.vx) < 8 ? this.idleT + dt : 0;
+    a.hopT = Math.max(0, a.hopT - dt);
+    a.guiltyT = Math.max(0, a.guiltyT - dt);
+
+    let tx, ty, air = false, wantSit = false;
+    if (a.override) {
+      tx = a.override.x;
+      ty = a.override.y;
+      wantSit = !!a.override.sit;
+    } else if (this.idleT > 0.25 && this.respawnT <= 0) {
+      // Ella está quieta: Arya se acomoda a su lado, sobre suelo firme.
+      const side = pl.x - pl.facing * 18;
+      const r = Math.floor(pl.y / 16);
+      tx = this.level.tileAt(Math.floor(side / 16), r) ? side : pl.x;
+      ty = pl.y;
+      tr.length = 0;
+      tr.push({ x: tx, y: ty, air: false });
+    } else {
+      let i = tr.length - 1;
+      let acc = 0;
+      while (i > 0 && acc < 22) {
+        acc += Math.hypot(tr[i].x - tr[i - 1].x, tr[i].y - tr[i - 1].y);
+        i--;
+      }
+      tx = tr[i].x;
+      ty = tr[i].y;
+      air = tr[i].air;
+      if (i > 0) tr.splice(0, i);
+    }
+    const dx = tx - a.x;
+    const dy = ty - a.y;
+    const d = Math.hypot(dx, dy);
+    const maxStep = (a.override ? 170 : 260) * dt;
+    if (d <= maxStep) { a.x = tx; a.y = ty; }
+    else { a.x += (dx / d) * maxStep; a.y += (dy / d) * maxStep; }
+    a.moving = d > 0.6;
+    if (Math.abs(dx) > 0.6) a.facing = dx > 0 ? 1 : -1;
+    else if (!a.moving) a.facing = a.override && a.override.face ? a.override.face : pl.x >= a.x ? 1 : -1;
+    a.air = !a.override && air && a.moving;
+    a.idleT = a.moving ? 0 : a.idleT + dt;
+    a.sit = !a.moving && (wantSit || a.idleT > 1.6);
+  }
+
+  // Dónde está la cabeza de cada personaje (para los globos de diálogo).
+  speakerPos(who) {
+    if (who === 'her') return { x: this.player.x, y: this.player.y - 31 };
+    if (who === 'him') return { x: this.npc.x, y: this.npc.y - 37 };
+    if (who === 'arya') return { x: this.arya.x + this.arya.facing * 4, y: this.arya.y - 19 };
+    if (who === 'pipu') return { x: this.level.bed.x, y: this.level.bed.y - 26 };
+    const s = this.suspects[who];
+    return { x: s.x, y: s.y - (who === 'tiana' ? 24 : 19) };
+  }
+
+  // ------------------------------------------------------------
+  // NIVEL 2 · El asesinato de Pipu
+  checkClues() {
+    const pl = this.player;
+    const cy = pl.y - HEIGHT / 2;
+    for (const c of this.clues) {
+      if (c.collected || c.hidden) continue;
+      if (Math.abs(pl.x - c.x) < 12 && Math.abs(cy - c.y) < 17) this.collectClue(c);
+    }
+  }
+
+  collectClue(c) {
+    if (c.collected || c.hidden) return;
+    c.collected = true;
+    this.count++;
+    this.player.reactT = REACT_TIME;
+    this.arya.guiltyT = 2.5;
+    this.burst('spark', c.x, c.y, 14, { color: '#fff3a6', speed: 90 });
+    this.burst('spark', c.x, c.y, 8, { color: '#ffffff', speed: 60 });
+    this.say('her', this.config.texts.pipu.clues[c.kind].say, 3.4);
+    this.emit('clue', { count: this.count, total: this.total, kind: c.kind });
+    if (this.count === this.total) this.emit('allClues');
+  }
+
+  updateCase(dt) {
+    const pl = this.player;
+    const a = this.arya;
+    const T = this.config.texts.pipu;
+    this.guardCd = Math.max(0, this.guardCd - dt);
+
+    // Interrogatorios: cada sospechoso da su coartada al acercarse.
+    for (const id in this.suspects) {
+      const s = this.suspects[id];
+      const dx = pl.x - s.x;
+      if (Math.abs(dx) > 4) s.facing = dx < 0 ? -1 : 1;
+      const near = Math.abs(dx) < 70 && Math.abs(pl.y - s.y) < 60;
+      if (near && !s.spoken) {
+        s.spoken = true;
+        this.say(id, T.alibi[id], 4.2);
+        this.emit('suspect', { id });
+      } else if (near && s.spoken && !s.hinted && this.count === this.total && !this.bubbles[id]) {
+        s.hinted = true;
+        this.say(id, T.hint[id], 4.2);
+      }
+    }
+
+    // La pista escondida: Arya corre a sentarse encima y solo se ve cuando se levanta.
+    const hc = this.clues.find((c) => c.hidden);
+    let override = null;
+    if (hc) {
+      const d = Math.abs(pl.x - hc.x);
+      if (!hc.sat && d < 80 && Math.abs(pl.y - hc.ground) < 70) {
+        hc.sat = true;
+        this.say('arya', T.aryaWhistle, 2.6);
+        this.emit('bark');
+      }
+      if (hc.sat) {
+        override = { x: hc.x, y: hc.ground, sit: true };
+        const seated = Math.abs(a.x - hc.x) < 3;
+        if (seated) hc.sitT += dt;
+        if (seated && hc.sitT > 1 && d > 105) {
+          hc.hidden = false;
+          override = null;
+          this.burst('spark', hc.x, hc.y, 12, { color: '#bfe9ff', speed: 70 });
+          this.say('her', T.revealed, 3.4);
+          this.emit('reveal');
+        }
+      }
+    }
+    // Arya vigila su camita: ahí hay un bulto muy sospechoso.
+    const bed = this.level.bed;
+    if (pl.x > bed.x - 110) {
+      override = { x: bed.x - 24, y: bed.y, sit: false, face: -1 };
+      if (this.guardCd <= 0 && pl.x > bed.x - 80) {
+        this.guardCd = 9;
+        this.say('arya', T.aryaGuard, 3);
+        this.emit('bark');
+      }
+    }
+    a.override = override;
+  }
+
+  // Acusar desde la libreta. Devuelve { ok, text }.
+  accuse(who) {
+    const T = this.config.texts.pipu;
+    if (this.state !== 'playing' || this.ending) return { ok: false, text: '' };
+    if (this.count < this.total) return { ok: false, text: T.needClues };
+    if (who !== 'arya') {
+      this.wrong++;
+      return { ok: false, text: T.defense[who] };
+    }
+    return { ok: true, text: T.aryaRevealed };
+  }
+
+  // Escena final del caso: corte a la camita de Arya. Solo una vez.
+  startCaseEnding() {
+    if (this.ending || this.count < this.total) return;
+    const bed = this.level.bed;
+    const pl = this.player;
+    this.ending = { t: 0, done: {} };
+    this.state = 'ending';
+    pl.reset(bed.x - 56, bed.y);
+    pl.reactT = 0;
+    pl.cheer = false;
+    this.respawnT = 0;
+    this.arya.override = { x: bed.x - 24, y: bed.y, sit: true, face: -1 };
+    this.arya.x = bed.x - 24;
+    this.arya.y = bed.y;
+    this.trail = [{ x: this.arya.x, y: this.arya.y, air: false }];
+    this.bubbles = {};
+    this.updateCamera(1, true);
+    this.emit('endingStart');
+  }
+
+  updateCaseEnding(dt) {
+    const e = this.ending;
+    const pl = this.player;
+    const T = this.config.texts.pipu;
+    const bed = this.level.bed;
+    e.t += dt;
+    pl.update(dt, NO_INPUT);
+    pl.events.length = 0;
+    pl.facing = 1;
+    this.pipu.t += dt;
+    const at = (t, key, fn) => {
+      if (e.t >= t && !e.done[key]) { e.done[key] = true; fn(); }
+    };
+    at(0.7, 'her1', () => this.say('her', T.endHer1, 2.4));
+    at(3.2, 'arya1', () => { this.arya.guiltyT = 9; this.say('arya', T.endArya1, 2.2); this.emit('bark'); });
+    at(5.6, 'blanket', () => {
+      this.pipu.state = 'sleep';
+      this.burst('puff', bed.x, bed.y - 10, 12, { speed: 55 });
+      this.emit('poof');
+      this.say('her', T.endHer2, 2);
+    });
+    at(7.8, 'arya2', () => { this.arya.override.face = -1; this.say('arya', T.endArya2, 3); });
+    at(11, 'burp', () => {
+      this.pipu.state = 'awake';
+      this.pipu.t = 0;
+      pl.cheer = true;
+      this.arya.override = { x: bed.x - 24, y: bed.y, sit: false, face: 1 };
+      e.party = true;
+      this.say('pipu', T.endPipu, 2.2);
+      this.burst('heart', bed.x, bed.y - 20, 18, { speed: 90, up: 90 });
+      this.burst('spark', bed.x, bed.y - 20, 16, { color: '#fff3a6', speed: 110 });
+      this.emit('burp');
+      this.emit('bigText');
+    });
+    at(13.6, 'him', () => {
+      const n = this.npc;
+      Object.assign(n, { hidden: false, x: bed.x + 46, y: bed.y, facing: -1, state: 'idle', spoken: true });
+      this.burst('puff', n.x, n.y - 12, 10, { speed: 45 });
+      this.emit('poof');
+      this.say('him', T.endHim, 3.2);
+    });
+    at(17, 'arya3', () => { this.say('arya', T.endArya3, 2.4); this.emit('bark'); });
+    if (this.pipu.state === 'sleep') {
+      this.fxT -= dt;
+      if (this.fxT <= 0) {
+        this.fxT = 0.7;
+        this.spawn({ type: 'zzz', x: bed.x + 6, y: bed.y - 22, vx: 8, vy: -14, life: 1.5, g: 0 });
+      }
+    }
+    if (e.party) {
+      this.arya.hopT = this.arya.hopT > 0 ? this.arya.hopT : 0.6;
+      this.fxT -= dt;
+      if (this.fxT <= 0) {
+        this.fxT = 0.12;
+        const x = this.cam.x + Math.random() * this.view.w;
+        this.spawn({ type: 'heart', x, y: this.cam.y - 6, vx: (Math.random() - 0.5) * 16, vy: 26 + Math.random() * 30, life: 6, g: 0, sway: Math.random() * 6, variant: (Math.random() * 3) | 0, small: Math.random() < 0.4 });
+      }
+    }
+    if (e.t > 19.5 && this.state === 'ending') {
+      this.state = 'won';
+      this.emit('won', { mode: 'pipu', count: this.count, total: this.total, wrong: this.wrong, hearts: this.heartCount, heartsTotal: this.hearts.length });
     }
   }
 
@@ -393,10 +654,15 @@ export class Game {
     const pl = this.player;
     let tx;
     let ty = pl.y - 20 - h * 0.56;
-    if (this.state === 'title' || this.ending) tx = (pl.x + this.npc.x) / 2 - w / 2;
+    if (this.mode === 'pipu') tx = (this.ending ? (pl.x + lvl.bed.x + 24) / 2 : pl.x + pl.facing * 22) - w / 2;
+    else if (this.state === 'title' || this.ending) tx = (pl.x + this.npc.x) / 2 - w / 2;
     else tx = pl.x + pl.facing * 22 - w / 2;
     tx = Math.max(0, Math.min(Math.max(0, lvl.width - w), tx));
-    ty = Math.max(0, Math.min(Math.max(0, lvl.height - h), ty));
+    // En las escenas finales la cámara baja un poco: los personajes quedan
+    // más arriba y el cartel final no los tapa.
+    const maxY = Math.max(0, lvl.height - h) + (this.ending ? 28 : 0);
+    if (this.ending) ty = maxY;
+    ty = Math.max(0, Math.min(maxY, ty));
     if (snap) {
       this.cam.x = tx;
       this.cam.y = ty;

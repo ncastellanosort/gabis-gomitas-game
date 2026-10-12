@@ -114,7 +114,7 @@ body {
   display: flex;
   align-items: center;
   gap: calc(var(--u) * 2);
-  font-size: calc(var(--u) * 8.2);
+  font-size: calc(var(--u) * 6.6);
   line-height: 1;
   letter-spacing: -0.02em;
   color: var(--pink);
@@ -143,19 +143,39 @@ body {
   border: max(2px, calc(var(--u) * 0.35)) solid var(--ink);
   padding: calc(var(--u) * 0.7) calc(var(--u) * 1.8);
 }
-#btn-play { margin-top: calc(var(--u) * 0.6); animation: pulse 0.9s steps(2) infinite; }
+/* Menú de niveles */
+.levels { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(var(--u) * 2.4); margin-top: calc(var(--u) * 0.6); }
+.btn.level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 0.4);
+  min-width: calc(var(--u) * 36);
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 2.2) calc(var(--u) * 1.4);
+  letter-spacing: 0.02em;
+}
+.lv-tag { font-size: max(10px, calc(var(--u) * 1.8)); letter-spacing: 0.2em; color: var(--yellow); text-shadow: 0 max(1px, calc(var(--u) * 0.25)) 0 var(--ink); }
+.lv-name { font-size: max(11px, calc(var(--u) * 3.1)); white-space: nowrap; }
+.lv-desc { font-size: max(10px, calc(var(--u) * 1.8)); font-weight: 400; text-shadow: none; opacity: 0.95; }
+.btn.level:first-child { animation: pulse 0.9s steps(2) infinite; }
 @keyframes pulse { 50% { filter: brightness(1.15); } }
 .hint {
-  margin: calc(var(--u) * 1) 0 0;
+  margin: calc(var(--u) * 0.4) 0 0;
   font-size: max(10px, calc(var(--u) * 2));
   color: var(--ink);
   background: rgba(255, 247, 234, 0.85);
   padding: calc(var(--u) * 0.4) calc(var(--u) * 1.2);
 }
-.hint.rotate { display: none; margin-top: 0; background: var(--yellow); border: 2px solid var(--ink); }
+/* Las indicaciones van abajo, sobre la tierra, para no tapar a los personajes. */
+#screen-title .hint { position: absolute; bottom: calc(var(--u) * 2); margin: 0; max-width: 94%; }
+.hint.rotate { display: none; background: var(--yellow); border: 2px solid var(--ink); }
 .hint:empty { display: none; }
 @media (orientation: portrait) {
   body.touch .hint.rotate { display: block; animation: wiggle 1.2s steps(2) infinite; }
+  body.touch #hint { display: none; }
+  .levels { flex-wrap: nowrap; gap: calc(var(--u) * 2); }
+  .btn.level { min-width: 0; }
+  .lv-desc { display: none; }
 }
 @keyframes wiggle { 50% { transform: rotate(-2deg); } }
 
@@ -305,12 +325,65 @@ body {
   animation: card-up 0.4s ease-out;
 }
 @keyframes card-up { from { opacity: 0; transform: translateY(calc(var(--u) * 4)); } }
+.win-btns { display: flex; align-items: center; gap: calc(var(--u) * 2); }
+.card.win .win-btns .btn.alt { font-size: max(12px, calc(var(--u) * 2.4)); }
 .win-text { display: flex; flex-direction: column; gap: calc(var(--u) * 0.5); min-width: 0; }
 .card.win .btn { min-width: 0; font-size: max(14px, calc(var(--u) * 3.2)); padding: calc(var(--u) * 1.2) calc(var(--u) * 2.6); white-space: nowrap; }
 #final-message { margin: 0; font-size: max(12px, calc(var(--u) * 2.5)); color: var(--pink-dark); }
 .card .note { margin: 0; font-size: max(10px, calc(var(--u) * 1.75)); font-weight: 400; }
 .card .stats { margin: 0; font-size: max(10px, calc(var(--u) * 1.75)); color: #7a4b8a; }
 .card .note:empty { display: none; }
+
+/* ---------- Libreta de la detective ---------- */
+.btn.small { font-size: max(11px, calc(var(--u) * 2)); padding: calc(var(--u) * 0.7) calc(var(--u) * 1.4); min-width: 0; box-shadow: 0 calc(var(--u) * 0.5) 0 var(--pink-dark), 0 calc(var(--u) * 0.5) 0 max(2px, calc(var(--u) * 0.45)) var(--ink); }
+.icon-btn.notes.ready { background: var(--yellow); animation: pulse 0.7s steps(2) infinite; }
+.notes-card {
+  width: min(97%, calc(var(--u) * 104));
+  max-height: 97%;
+  gap: calc(var(--u) * 0.7);
+  padding: calc(var(--u) * 1) calc(var(--u) * 2) calc(var(--u) * 1.8);
+  background: #fff7ea repeating-linear-gradient(transparent 0 calc(var(--u) * 3.4), rgba(59, 34, 68, 0.07) 0 calc(var(--u) * 3.6));
+}
+.notes-card h2 { font-size: max(13px, calc(var(--u) * 2.6)); }
+.notes-cols { display: flex; gap: calc(var(--u) * 2.4); width: 100%; min-height: 0; text-align: left; align-items: stretch; }
+.scrolly { overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
+#clue-list { flex: 1 1 46%; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(var(--u) * 0.9); }
+#clue-list li { display: flex; align-items: center; gap: calc(var(--u) * 1.2); opacity: 0.5; }
+#clue-list li.found { opacity: 1; }
+#clue-list canvas { flex: none; width: calc(var(--u) * 4.4); height: calc(var(--u) * 4.4); image-rendering: pixelated; }
+#clue-list b, .suspect b { display: block; font-size: max(11px, calc(var(--u) * 2.1)); color: var(--pink-dark); }
+#clue-list span, .suspect span, .suspect i { display: block; font-size: max(10px, calc(var(--u) * 1.7)); font-weight: 400; line-height: 1.2; }
+.suspects { flex: 1 1 54%; }
+.suspects h3 { margin: 0 0 calc(var(--u) * 0.8); font-size: max(11px, calc(var(--u) * 2)); letter-spacing: 0.15em; color: #7a4b8a; }
+#suspect-list { display: flex; flex-direction: column; gap: calc(var(--u) * 0.9); }
+.suspect {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.2);
+  padding: calc(var(--u) * 0.5) calc(var(--u) * 1.2) calc(var(--u) * 0.9) calc(var(--u) * 0.8);
+  background: #fff;
+  border: max(2px, calc(var(--u) * 0.3)) solid var(--ink);
+}
+.suspect > div { flex: 1 1 auto; min-width: 0; }
+.suspect .btn { flex: none; }
+.notes-card > .btn { font-size: max(12px, calc(var(--u) * 2.4)); padding: calc(var(--u) * 0.9) calc(var(--u) * 4); min-width: 0; }
+.suspect canvas { flex: none; width: calc(var(--u) * 5.4); height: calc(var(--u) * 5.4); image-rendering: pixelated; background: #e6ecff; }
+.suspect canvas.unknown { background: #3b2244 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9' shape-rendering='crispEdges'%3E%3Cpath fill='%23ffd23f' d='M3 2h3v1h1v2H6v1H5v1H4V5h1V4h1V3H3zM4 7h1v1H4z'/%3E%3C/svg%3E") center / 80% no-repeat; }
+.suspect i { font-style: normal; color: #7a4b8a; }
+.suspect.mystery, .suspect.arya { background: #fff3c4; animation: screen-in 0.3s steps(4); }
+#notes-msg { margin: 0; min-height: 1.3em; font-size: max(11px, calc(var(--u) * 2.1)); color: #c2337a; }
+#notes-msg.shake { animation: shake 0.35s steps(6); }
+@keyframes shake { 20% { transform: translateX(calc(var(--u) * -1)); } 60% { transform: translateX(calc(var(--u) * 1)); } }
+.bubble.arya { background: #fff1dc; }
+.bubble.arya::after { background: #fff1dc; }
+.bubble.chif { background: #ffe6d2; }
+.bubble.chif::after { background: #ffe6d2; }
+.bubble.tiana { background: #f6eedc; }
+.bubble.tiana::after { background: #f6eedc; }
+@media (orientation: portrait) {
+  .notes-cols { flex-direction: column; overflow-y: auto; touch-action: pan-y; }
+  #clue-list, .suspects { flex: none; width: 100%; }
+}
 
 #fade {
   position: absolute;
@@ -366,6 +439,8 @@ body {
 .tbtn.jump.down { background: rgba(255, 95, 162, 0.95); }
 
 body:not(.state-playing) #touch { opacity: 0.25; }
+/* En pausa o con la libreta abierta, los controles no deben tapar los botones del panel. */
+body:not(.state-playing) .pad { pointer-events: none; }
 body.state-title #touch, body.state-ending #touch, body.state-won #touch { visibility: hidden; }
 
 /* En vertical: el juego arriba y los controles abajo, sin taparse. */
