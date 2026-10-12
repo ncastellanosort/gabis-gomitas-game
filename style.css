@@ -378,6 +378,8 @@ body {
 .bubble.arya::after { background: #fff1dc; }
 .bubble.chif { background: #ffe6d2; }
 .bubble.chif::after { background: #ffe6d2; }
+.bubble.carino { background: #e3f1ff; }
+.bubble.carino::after { background: #e3f1ff; }
 .bubble.tiana { background: #f6eedc; }
 .bubble.tiana::after { background: #f6eedc; }
 @media (orientation: portrait) {

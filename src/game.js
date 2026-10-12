@@ -407,7 +407,7 @@ export class Game {
     if (who === 'arya') return { x: this.arya.x + this.arya.facing * 4, y: this.arya.y - 19 };
     if (who === 'pipu') return { x: this.level.bed.x, y: this.level.bed.y - 26 };
     const s = this.suspects[who];
-    return { x: s.x, y: s.y - (who === 'tiana' ? 24 : 19) };
+    return { x: s.x, y: s.y - (who === 'tiana' ? 24 : who === 'carino' ? 22 : 19) };
   }
 
   // ------------------------------------------------------------
@@ -450,7 +450,7 @@ export class Game {
         s.spoken = true;
         this.say(id, T.alibi[id], 4.2);
         this.emit('suspect', { id });
-      } else if (near && s.spoken && !s.hinted && this.count === this.total && !this.bubbles[id]) {
+      } else if (near && s.spoken && !s.hinted && T.hint[id] && this.count === this.total && !this.bubbles[id]) {
         s.hinted = true;
         this.say(id, T.hint[id], 4.2);
       }

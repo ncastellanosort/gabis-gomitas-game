@@ -44,6 +44,7 @@ export function createPipuLevel() {
   L.suspects = {
     chif: { x: px(54), y: 10 * TILE },
     tiana: { x: px(82), y: G },
+    carino: { x: px(11.5), y: G, facing: -1 }, // el testigo, junto a la escena del crimen
   };
 
   B.hearts([
@@ -68,5 +69,5 @@ export function createPipuLevel() {
   // Notas anónimas clavadas en el suelo (el texto está en config.js)
   L.papers = [{ x: px(31.5), y: G }, { x: px(65), y: G }, { x: px(115), y: G }];
 
-  return B.finish([13, 14, 15, 16, 17, 22, 29, 31, 54, 63, 65, 82, 89, 95, 115, 119, 131, 132, 133, 134, 135]);
+  return B.finish([11, 12, 13, 14, 15, 16, 17, 22, 29, 31, 54, 63, 65, 82, 89, 95, 115, 119, 131, 132, 133, 134, 135]);
 }

@@ -99,12 +99,15 @@ export const CONFIG = {
         arya: { name: 'Arya', kind: 'tu fiel asistente' },
         nico: { name: 'Mi bobio', kind: 'el dueño de las gomitas' },
         shadow: { name: 'La sombra', kind: 'figura misteriosa' },
+        carino: { name: 'Cariñosito', kind: 'testigo' },
       },
       // Coartadas al interrogarlos
       alibi: {
         chif: 'Yo estaba encima de la cama, acostado con el Cariñosito :(',
         tiana: 'Yo estaba en el piso porque Gabis me tiró contra la pared :(',
         nico: 'Yo solo vine por mis gomitas. Desaparecieron esta noche.',
+        // El Cariñosito no es sospechoso: es el testigo
+        carino: 'Yo estaba hablando con Pipu... ¡y de repente desapareció! :(',
       },
       notAsked: 'Aún no lo has interrogado.',
       // La sombra que huye (resulta ser su bobio buscando sus gomitas)
@@ -196,6 +199,7 @@ export const CONFIG = {
   arya: { coat: '#e08a3c', ears: '#b8662e', light: '#f8cf9c', nose: '#3a2420' },
   chif: { coat: '#cf5a2c', dark: '#3a2420', light: '#fff4e6', nose: '#1a1210' },
   tiana: { pajama: '#e6cfa4', pajamaShade: '#c9ae80', earInside: '#f7a8b8', wool: '#ffffff', face: '#f6dcd0' },
+  carino: { fur: '#8cc4ee', shade: '#6aa8de', cloud: '#2740a8', nose: '#2f55c8' }, // el Cariñosito
   pipu: { body: '#8e939c', belly: '#ffffff', beak: '#ffb02e', eyes: '#26262e', closedEyes: '#5d626c' },
 
   // ---------- Física (píxeles y segundos) ----------

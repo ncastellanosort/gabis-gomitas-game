@@ -16,14 +16,15 @@ export function createMenuLevel() {
   L.suspects = {
     chif: { x: cx - 58, y: G, facing: 1 },
     tiana: { x: cx + 40, y: G, facing: -1 },
+    carino: { x: cx + 86, y: G, facing: -1 },
   };
   L.pipuSpot = { x: cx + 62, y: G };
-  L.garland = { x1: cx - 84, x2: cx + 84, y: G };
+  L.garland = { x1: cx - 100, x2: cx + 106, y: G };
 
   [[26, 0], [33, 1], [46, 0], [53, 1], [14, 1], [66, 0]].forEach(([c, v]) => B.put('tree', c, { variant: v }));
   [30, 49, 20, 60].forEach((c, i) => B.put('bush', c, { variant: i % 2 }));
 
   const busy = [];
-  for (let c = Math.floor((cx - 70) / TILE); c <= Math.floor((cx + 74) / TILE); c++) busy.push(c);
+  for (let c = Math.floor((cx - 70) / TILE); c <= Math.floor((cx + 100) / TILE); c++) busy.push(c);
   return B.finish(busy);
 }

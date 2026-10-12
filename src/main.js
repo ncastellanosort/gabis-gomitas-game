@@ -282,7 +282,7 @@ function renderNotes() {
   const box = $('suspect-list');
   box.textContent = '';
   const all = game.count === game.total;
-  const cards = ['chif', 'tiana', 'nico'];
+  const cards = ['chif', 'tiana', 'nico', 'carino'];
   // Con todas las pistas aparece arriba la tarjeta misteriosa (el giro).
   if (all) cards.unshift(aryaRevealed ? 'arya' : 'mystery');
   for (const id of cards) {
@@ -319,7 +319,8 @@ function renderNotes() {
       btn.textContent = PT.accuse;
       btn.dataset.accuse = id;
     }
-    card.append(cv, info, btn);
+    card.append(cv, info);
+    if (id !== 'carino') card.append(btn); // al testigo no se le acusa
     box.append(card);
   }
   box.parentElement.scrollTop = 0;
