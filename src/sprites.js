@@ -284,7 +284,7 @@ const TIANA = [
 const PIPU = [
   '....kkkkkk....',
   '...kkkkkkkk...',
-  '..kkwkkkkwkk..',
+  '..kkeekkeekk..',
   '..kkkkyykkkk..',
   '..kwwwyywwwk..',
   '.kkwwwwwwwwkk.',
@@ -297,7 +297,8 @@ const PIPU = [
   '..kkkkkkkkkk..',
   '..yyy....yyy..',
 ];
-const PIPU_SLEEP = PIPU.map((r, i) => (i === 2 ? '..kkggkkggkk..' : r));
+// Ojitos chinitos: una rayita. Dormido, la rayita baja y se aclara.
+const PIPU_SLEEP = PIPU.map((r, i) => (i === 2 ? '..kkkkkkkkkk..' : i === 3 ? '..kggkyykggk..' : r));
 
 // Pistas del caso
 const CLUES = {
@@ -432,7 +433,7 @@ export function buildSprites(config) {
   }
 
   const A = config.arya, C = config.chif, Ti = config.tiana, Pi = config.pipu;
-  const pipuPal = { k: Pi.body, w: Pi.belly, y: Pi.beak, g: Pi.closedEyes };
+  const pipuPal = { k: Pi.body, w: Pi.belly, y: Pi.beak, e: Pi.eyes, g: Pi.closedEyes };
 
   return {
     arya: mapRows('arya', ARYA, { a: A.coat, e: A.ears, w: A.light, k: '#2a1a1a', n: A.nose }),

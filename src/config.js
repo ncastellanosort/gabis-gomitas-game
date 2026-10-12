@@ -70,7 +70,7 @@ export const CONFIG = {
       intro: [
         'CASO 001: el asesinato de Pipu',
         'Víctima: pingüino de peluche, chiquito y gordito',
-        'Detective a cargo: Gabi. Asistente: Arya',
+        'Detective a cargo: Gabis. Asistente: Arya',
       ],
       cluesLabel: 'Pistas',
       // Texto bajo el contador, según cuántas pistas lleva
@@ -85,7 +85,7 @@ export const CONFIG = {
       // Cada pista: nombre, lo que dice ella al encontrarla y lo que anota en la libreta
       clues: {
         pelos: { name: 'Pelitos naranjas', say: 'Pelitos naranjas... interesante.', note: 'El culpable es de color naranja.' },
-        huellas: { name: 'Huellas de patitas', say: 'Huellas con almohadillas. Nada de pezuñas.', note: 'Tiene patitas con almohadillas, no pezuñas.' },
+        huellas: { name: 'Huellas de patitas', say: '¿Parecen huellas de perrito?', note: 'Tiene patitas con almohadillas, no pezuñas.' },
         foto: { name: 'Foto borrosa', say: 'Una foto: alguien de orejas largas.', note: 'Se ven unas orejas largas. No son puntudas.' },
         babas: { name: 'Charco de babas', say: 'Guácala, babas. Muchas babas.', note: 'El culpable babea. Mucho.' },
         envoltorio: { name: 'Envoltorio de gomitas', say: '¡Un paquete de gomitas vacío!', note: 'Alguien se comió un paquete entero.' },
@@ -99,8 +99,8 @@ export const CONFIG = {
       },
       // Coartadas al interrogarlos
       alibi: {
-        chif: 'Yo estaba en mi madriguera. Soy naranja, sí, ¡pero inocente!',
-        tiana: 'Beee... yo ya estaba en pijama. ¡Y tengo pezuñas!',
+        chif: 'Yo estaba encima de la cama, acostado con el Cariñosito :(',
+        tiana: 'Yo estaba en el piso porque Gabis me tiró contra la pared :(',
       },
       notAsked: 'Aún no lo has interrogado.',
       // Lo que dicen si vuelves cuando ya tienes todas las pistas
@@ -108,7 +108,7 @@ export const CONFIG = {
         chif: 'Oye... esa perrita estuvo sentada MUCHO rato en el mismo sitio.',
         tiana: 'Beee... ¿y quién más tiene orejas largas por aquí?',
       },
-      aryaWhistle: '(silbidito inocente)',
+      aryaWhistle: '(aullido inocente)',
       aryaGuard: '¡Guau! (aquí no hay nada que ver)',
       revealed: '¿Y eso que estaba tapando Arya?',
       allClues: '¡Todas las pistas! Abre la libreta y acusa',
@@ -128,15 +128,15 @@ export const CONFIG = {
       aryaRevealed: 'Naranjita, con patitas, orejas largas y babas... ¡¿ARYA?!',
       // Escena final
       endHer1: 'Arya... ¿qué hay en tu camita?',
-      endArya1: '(silbidito MUY inocente)',
+      endArya1: '(aullido MUY inocente)',
       endHer2: '¡¿PIPU?!',
       endArya2: 'Guau... solo quería dormir con él.',
       endPipu: '¡BUUURP!',
       endHim: '¿Y mis gomitas? ¡Era un paquete entero!',
-      endArya3: '(silbidito otra vez)',
+      endArya3: '(aullido otra vez)',
       bigText: 'CASO CERRADO',
       finalMessage: 'Pipu está vivo (y empachado de gomitas)',
-      finalNote: 'Arya queda en libertad condicional: solo quería dormir con él.',
+      finalNote: 'Arya queda en libertad condicional. Todos pensaron que era un homicidio preterintencional.',
       wrongLabel: 'Acusaciones fallidas',
     },
 
@@ -181,7 +181,7 @@ export const CONFIG = {
   arya: { coat: '#e08a3c', ears: '#b8662e', light: '#f8cf9c', nose: '#3a2420' },
   chif: { coat: '#f07a2a', dark: '#5a3324', light: '#fff4e6', nose: '#3a2420' },
   tiana: { pajama: '#e6cfa4', pajamaShade: '#c9ae80', earInside: '#f7a8b8', wool: '#ffffff', face: '#f6dcd0' },
-  pipu: { body: '#2b3350', belly: '#ffffff', beak: '#ffb02e', closedEyes: '#8f9bc4' },
+  pipu: { body: '#8e939c', belly: '#ffffff', beak: '#ffb02e', eyes: '#26262e', closedEyes: '#5d626c' },
 
   // ---------- Física (píxeles y segundos) ----------
   physics: {
