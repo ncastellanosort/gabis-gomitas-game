@@ -215,7 +215,9 @@ test('nivel 2: caso completo, acusaciones y final', () => {
   game.startCaseEnding();
   game.startCaseEnding();
   assert.equal(game.state, 'ending');
-  run(game, { left: true, jump: true }, 6);
+  run(game, { left: true, jump: true }, 1);
+  assert.equal(game.bubbles.her?.text, CONFIG.texts.pipu.endReact, 'ella reacciona primero');
+  run(game, { left: true, jump: true }, 8);
   assert.equal(game.pipu.state, 'sleep', 'Pipu aparece dormido en la camita');
   run(game, NONE, 16);
   assert.equal(game.state, 'won');

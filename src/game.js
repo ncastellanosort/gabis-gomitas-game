@@ -587,16 +587,17 @@ export class Game {
     const at = (t, key, fn) => {
       if (e.t >= t && !e.done[key]) { e.done[key] = true; fn(); }
     };
-    at(0.7, 'her1', () => this.say('her', T.endHer1, 2.4));
-    at(3.2, 'arya1', () => { this.arya.guiltyT = 9; this.say('arya', T.endArya1, 2.2); this.emit('bark'); });
-    at(5.6, 'blanket', () => {
+    at(0.6, 'react', () => { pl.reactT = 0; this.say('her', T.endReact, 2.4); });
+    at(3.3, 'her1', () => this.say('her', T.endHer1, 2.4));
+    at(5.8, 'arya1', () => { this.arya.guiltyT = 9; this.say('arya', T.endArya1, 2.2); this.emit('bark'); });
+    at(8.2, 'blanket', () => {
       this.pipu.state = 'sleep';
       this.burst('puff', bed.x, bed.y - 10, 12, { speed: 55 });
       this.emit('poof');
       this.say('her', T.endHer2, 2);
     });
-    at(7.8, 'arya2', () => { this.arya.override.face = -1; this.say('arya', T.endArya2, 3); });
-    at(11, 'burp', () => {
+    at(10.4, 'arya2', () => { this.arya.override.face = -1; this.say('arya', T.endArya2, 3); });
+    at(13.6, 'burp', () => {
       this.pipu.state = 'awake';
       this.pipu.t = 0;
       pl.cheer = true;
@@ -608,14 +609,14 @@ export class Game {
       this.emit('burp');
       this.emit('bigText');
     });
-    at(13.6, 'him', () => {
+    at(16.2, 'him', () => {
       const n = this.npc;
       Object.assign(n, { hidden: false, x: bed.x + 46, y: bed.y, facing: -1, state: 'idle', spoken: true });
       this.burst('puff', n.x, n.y - 12, 10, { speed: 45 });
       this.emit('poof');
       this.say('him', T.endHim, 3.2);
     });
-    at(17, 'arya3', () => { this.say('arya', T.endArya3, 2.4); this.emit('bark'); });
+    at(19.6, 'arya3', () => { this.say('arya', T.endArya3, 2.4); this.emit('bark'); });
     if (this.pipu.state === 'sleep') {
       this.fxT -= dt;
       if (this.fxT <= 0) {
@@ -632,7 +633,7 @@ export class Game {
         this.spawn({ type: 'heart', x, y: this.cam.y - 6, vx: (Math.random() - 0.5) * 16, vy: 26 + Math.random() * 30, life: 6, g: 0, sway: Math.random() * 6, variant: (Math.random() * 3) | 0, small: Math.random() < 0.4 });
       }
     }
-    if (e.t > 19.5 && this.state === 'ending') {
+    if (e.t > 22.1 && this.state === 'ending') {
       this.state = 'won';
       this.emit('won', { mode: 'pipu', count: this.count, total: this.total, wrong: this.wrong, hearts: this.heartCount, heartsTotal: this.hearts.length });
     }

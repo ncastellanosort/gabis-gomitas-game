@@ -145,6 +145,7 @@ export const CONFIG = {
       },
       aryaRevealed: 'Naranjita, con patitas, orejas largas y babas... ¡¿ARYA?!',
       // Escena final
+      endReact: 'FUE ARIRIA? QUE?', // su reacción al descubrir a la culpable
       endHer1: 'Arya... ¿qué hay en tu camita?',
       endArya1: '(aullido MUY inocente)',
       endHer2: '¡¿PIPU?!',
