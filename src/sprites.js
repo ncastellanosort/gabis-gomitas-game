@@ -41,21 +41,23 @@ const mapRows = (name, set, pal) => Object.fromEntries(Object.entries(set).map((
 // ------------------------------------------------------------------
 // ELLA  (16 x 24: cabeza 14 filas, torso 7, piernas 5)
 // ------------------------------------------------------------------
+// Peinado de cebollita: moño crespo arriba, crespitos sueltos a los lados
+// y areticos dorados (g).
 const HER_HEAD = [
-  '....hhHhhhHh....',
-  '..hhHoHHhHoHhh..',
-  '.hHoHHhHHoHHHhh.',
-  '.hHHHoHHHHHhoHh.',
-  'hHhHHHHhHHHHHHHh',
-  'hHoHHHsHssHsHoHh',
-  'hHHHhssssssssHHh',
-  'hoHHHssssssssHhh',
-  'hHHhHssssssssHHh',
-  'hHoHHssssssssoHh',
-  '.hHHhssssssssHh.',
-  '.hoHHhSssssSHHh.',
-  '..hHhH.....hHh..',
-  '...hh.......h...',
+  '....hHoHHoh.....',
+  '...hHoHHhHoHh...',
+  '...hHHoHHoHHh...',
+  '....hHHhHHHh....',
+  '...hHHoHHHoHHh..',
+  '..hHoHssssssHoh.',
+  '..hHHssssssssHh.',
+  '..oHssssssssssh.',
+  '..o.ssssssssss.o',
+  '...ogssssssssgo.',
+  '...o.ssssssss.o.',
+  '......SssssS....',
+  '................',
+  '................',
 ];
 
 // Caras (8 x 6), una por estado emocional. Se pintan sobre la cabeza.
@@ -75,14 +77,14 @@ const HER_FACES = [
 ];
 const HER_BLINK = ['........', '........', '.ss..ss.', '.kk..kk.', '........', '........'];
 
-// Top negro sin mangas (y, con brillo Y), brazos (s) y pantalón (v).
+// Top negro sin mangas (y, con brillo Y), brazos (s), manillas doradas (g) y pantalón (v).
 const HER_PANTS = ['.....vvvvvv.....', '.....vvVVvv.....'];
 const HER_TORSO = {
-  idle: ['......yyyy......', '....syyyyyys....', '....syYyyyys....', '....syyyyyys....', '....syyyyyys....', ...HER_PANTS],
-  crossed: ['......yyyy......', '....syyyyyys....', '....ssssSsss....', '.....yyyyyy.....', '.....yyyyyy.....', ...HER_PANTS],
-  swing: ['......yyyy......', '....syyyyyys....', '....syYyyyys....', '...s.yyyyyy.s...', '.....yyyyyy.....', ...HER_PANTS],
-  up: ['......yyyy......', '....syyyyyys....', '..sssyYyyyysss..', '.....yyyyyy.....', '.....yyyyyy.....', ...HER_PANTS],
-  fall: ['.s....yyyy....s.', '..s.syyyyyys.s..', '...ssyYyyyyss...', '.....yyyyyy.....', '.....yyyyyy.....', ...HER_PANTS],
+  idle: ['......yyyy......', '....syyyyyys....', '....syYyyyys....', '....gyyyyyyg....', '....syyyyyys....', ...HER_PANTS],
+  crossed: ['......yyyy......', '....syyyyyys....', '....sgssSsgs....', '.....yyyyyy.....', '.....yyyyyy.....', ...HER_PANTS],
+  swing: ['......yyyy......', '....syyyyyys....', '....gyYyyyyg....', '...s.yyyyyy.s...', '.....yyyyyy.....', ...HER_PANTS],
+  up: ['......yyyy......', '....syyyyyys....', '..sgsyYyyyysgs..', '.....yyyyyy.....', '.....yyyyyy.....', ...HER_PANTS],
+  fall: ['.s....yyyy....s.', '..g.syyyyyys.g..', '...ssyYyyyyss...', '.....yyyyyy.....', '.....yyyyyy.....', ...HER_PANTS],
 };
 
 const HER_LEGS = {
@@ -439,7 +441,7 @@ export function buildSprites(config) {
   const h = config.her;
   const herPal = {
     h: h.hairDark, H: h.hair, o: h.hairLight, s: h.skin, S: h.skinShade,
-    y: h.top, Y: h.topShine, v: h.pants, V: h.pantsShade, w: h.shoes, p: h.soles,
+    y: h.top, Y: h.topShine, g: h.gold, v: h.pants, V: h.pantsShade, w: h.shoes, p: h.soles,
   };
   const herLegsPal = { ...herPal, s: h.pants }; // las piernas van con pantalón
   const facePal = { k: '#2a1a1a', w: '#ffffff', m: '#8c2f3a', b: '#f58a9a', r: '#ff6f8f', p: '#ff3d6e', s: h.skin };

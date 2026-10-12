@@ -176,6 +176,7 @@ export const CONFIG = {
     hairLight: '#b8662e',
     skin: '#dba06c',
     skinShade: '#b97c4c',
+    gold: '#ffc83d', // areticos y manillas
     top: '#1d1b22', // top negro
     topShine: '#3a3743',
     pants: '#7d7068', // café tirando a gris
