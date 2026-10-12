@@ -296,7 +296,7 @@ const TIANA = [
   '.bbbwwwwwwbbb.',
   '.bbwwwwwwwwbb.',
   '.bbffffffffbb.',
-  '.bbfkffffkfbb.',
+  '.bbfkkffkkfbb.', // ojitos rasgados
   '.bbffffffffbb.',
   '..bbffmmffbb..',
   '...bbbbbbbb...',
