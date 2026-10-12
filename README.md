@@ -74,7 +74,7 @@ src/main.js       arranque, interfaz, estados (inicio, pausa, final)
 src/game.js       lógica: gomitas, emociones, pistas, sospechosos, Arya, finales
 src/player.js     movimiento, salto, gravedad y colisiones
 src/level.js      base común de los niveles (casillas, decoración)
-src/levels/       gomitas.js (nivel 1) y pipu.js (nivel 2)
+src/levels/       menu.js (menú), gomitas.js (nivel 1) y pipu.js (nivel 2)
 src/sprites.js    pixel art de personajes y objetos
 src/renderer.js   dibujo del mundo, fondos y partículas
 src/audio.js      efectos de sonido y música (Web Audio)

@@ -3,6 +3,7 @@
 import { CONFIG } from './config.js';
 import { createGomitasLevel } from './levels/gomitas.js';
 import { createPipuLevel } from './levels/pipu.js';
+import { createMenuLevel } from './levels/menu.js';
 import { Game, STEP } from './game.js';
 import { Renderer } from './renderer.js';
 import { AudioKit } from './audio.js';
@@ -12,15 +13,15 @@ const $ = (id) => document.getElementById(id);
 const TX = CONFIG.texts;
 
 const PT = TX.pipu;
-const levels = { gomitas: createGomitasLevel(), pipu: createPipuLevel() };
+const levels = { menu: createMenuLevel(), gomitas: createGomitasLevel(), pipu: createPipuLevel() };
 const stage = $('stage');
 const canvas = $('game');
-const renderer = new Renderer(canvas, levels.gomitas, CONFIG);
+const renderer = new Renderer(canvas, levels.menu, CONFIG);
 const audio = new AudioKit(CONFIG.audio);
 const input = new Input();
-// La partida actual. En el menú se ve el nivel 1 de fondo.
-let game = new Game(CONFIG, levels.gomitas, onGameEvent);
-let level = levels.gomitas;
+// La partida actual. En el menú se ve un escenario propio con todo el elenco.
+let game = new Game(CONFIG, levels.menu, onGameEvent);
+let level = levels.menu;
 
 let paused = false;
 let notesOpen = false;
@@ -59,7 +60,8 @@ $('btn-restart2').textContent = TX.restart;
 $('btn-replay').textContent = TX.replay;
 
 // Gomitas del logo y casillas del HUD
-document.querySelectorAll('.logo-gomita').forEach((c, i) => c.getContext('2d').drawImage(renderer.S.gomitas[i ? 3 : 0].c, 0, 0));
+// Iconos del logo: una gomita (nivel 1) y Pipu (nivel 2)
+document.querySelectorAll('.logo-icon').forEach((c, i) => icon(c, i ? renderer.S.pipu.awake : renderer.S.gomitas[0]));
 let slots = [];
 function buildSlots() {
   $('slots').textContent = '';
@@ -507,7 +509,7 @@ function toMenu() {
     hideScreens();
     audio.resume();
     audio.stopMusic();
-    level = levels.gomitas;
+    level = levels.menu;
     game = new Game(CONFIG, level, onGameEvent);
     renderer.setLevel(level);
     game.setView(canvas.width, canvas.height);

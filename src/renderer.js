@@ -6,6 +6,7 @@ import { REACT_TIME } from './game.js';
 
 const SKY = ['#8ecbff', '#9ed4ff', '#afdcff', '#c1e5ff', '#d4ecff', '#e6f0ff', '#f6eefc', '#ffe9f3', '#ffdfeb'];
 const SKY_NIGHT = ['#3b3f8f', '#4347a0', '#4c52ae', '#5960bb', '#6a70c6', '#7d82d0', '#9391d8', '#ab9fde', '#c4ade2'];
+const SKY_DUSK = ['#6a58b0', '#8262b6', '#9c6dba', '#b97bbc', '#d58bb6', '#ec9fae', '#f9b6a4', '#ffcc9f', '#ffe0ac'];
 const BG_W = 512;
 
 export class Renderer {
@@ -30,6 +31,7 @@ export class Renderer {
   setLevel(level) {
     this.level = level;
     this.night = level.theme === 'night';
+    this.dusk = level.theme === 'dusk';
     this.world = this.worlds[level.id] || (this.worlds[level.id] = this.buildWorld());
     this.stars = Array.from({ length: 46 }, (_, i) => ({ x: hash2(i, 31), y: hash2(i, 32) * 0.55, big: hash2(i, 33) > 0.8, ph: hash2(i, 34) * 6 }));
   }
@@ -172,14 +174,14 @@ export class Renderer {
 
     // Cielo en franjas
     const night = this.night;
-    const sky = night ? SKY_NIGHT : SKY;
+    const sky = night ? SKY_NIGHT : this.dusk ? SKY_DUSK : SKY;
     const band = Math.ceil((h * 0.85) / SKY.length);
     sky.forEach((c, i) => {
       ctx.fillStyle = c;
       ctx.fillRect(0, i * band, w, i === SKY.length - 1 ? h : band);
     });
     // Sol
-    const sx = Math.round(w * 0.8), sy = 30 - Math.round(cy * 0.05);
+    const sx = Math.round(w * 0.8), sy = (this.dusk ? Math.round(h * 0.46) : 30) - Math.round(cy * 0.05);
     if (night) {
       for (const st of this.stars) {
         if (Math.sin(t * 1.5 + st.ph) < -0.6) continue; // titilan
@@ -227,6 +229,13 @@ export class Renderer {
         ctx.fillStyle = '#4a3a5a'; ctx.fillRect(x - 1, d.y - cy - 30, 2, 31); ctx.fillRect(x - 3, d.y - cy - 1, 6, 2);
         ctx.fillRect(x - 3, d.y - cy - 38, 6, 2); ctx.fillRect(x - 4, d.y - cy - 31, 8, 2);
       }
+    }
+    // Al atardecer el paisaje se tiñe de un tono cálido.
+    if (this.dusk) {
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = '#ffd0c2';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
     }
     // De noche: todo el paisaje se tiñe de azul; lo que brilla se dibuja después.
     if (night) {
@@ -489,7 +498,7 @@ export class Renderer {
     ctx.drawImage(S.head[k], x, top);
     if (!n.shadow) ctx.drawImage(S.faces[face][k], x + 4, top + 5);
     // En el caso de Pipu llega con las manos vacías: se comieron el paquete.
-    if (g.mode !== 'pipu') ctx.drawImage(this.S.bag[k], x + (flip ? 16 - bag[0] - 9 : bag[0]), top + bag[1]);
+    if (g.mode === 'gomitas') ctx.drawImage(this.S.bag[k], x + (flip ? 16 - bag[0] - 9 : bag[0]), top + bag[1]);
   }
 
   // ---------- Arya ----------
@@ -539,7 +548,7 @@ export class Renderer {
 
   drawCase(g) {
     const lvl = this.level;
-    if (!lvl.bed) return;
+    if (!lvl.suspects) return;
     const ctx = this.ctx;
     const t = g.time;
     for (const id in g.suspects) {
@@ -559,6 +568,12 @@ export class Renderer {
       ctx.drawImage(this.S.paper.c, x - 3, y - 15 - (pp.read ? 0 : Math.floor(t * 3) % 2));
       if (!pp.read && Math.floor(t * 2) % 2) this.spark(x + 5, y - 17, '#fff3a6', false);
     }
+    // Pipu de pie (escenario del menú)
+    if (lvl.pipuSpot) {
+      const sp = this.S.pipu.awake;
+      ctx.drawImage(sp.c, lvl.pipuSpot.x - 7 - this.cx, lvl.pipuSpot.y - sp.h - this.cy - (Math.floor(t * 2.2) % 2));
+    }
+    if (!lvl.bed) return;
     // Camita de Arya
     const bx = lvl.bed.x - this.cx, by = lvl.bed.y - this.cy;
     if (bx < -40 || bx > this.w + 40) return;

@@ -36,7 +36,7 @@ export class Game {
     this.player.cheer = false;
     this.gomitas = lvl.gomitas.map((g) => ({ ...g, collected: false }));
     this.clues = (lvl.clues || []).map((c) => ({ ...c, collected: false, sat: false, sitT: 0 }));
-    this.suspects = Object.fromEntries(Object.entries(lvl.suspects || {}).map(([id, s]) => [id, { ...s, spoken: false, hinted: false, facing: -1 }]));
+    this.suspects = Object.fromEntries(Object.entries(lvl.suspects || {}).map(([id, s]) => [id, { facing: -1, ...s, spoken: false, hinted: false }]));
     this.wrong = 0;
     this.pipu = { state: 'hidden', t: 0 };
     this.guardCd = 0;
@@ -46,13 +46,14 @@ export class Game {
     this.hearts = lvl.hearts.map((h) => ({ ...h, collected: false }));
     this.count = 0;
     this.heartCount = 0;
-    this.mood = this.mode === 'pipu' ? 3 : 0;
+    this.mood = this.mode === 'gomitas' ? 0 : 3;
     this.particles = [];
     this.bubbles = {};
     this.bubbleSeq = 0;
     this.springAnim = lvl.springs.map(() => 0);
     this.npc = { spot: 0, x: lvl.start.x, y: lvl.start.y, facing: -1, state: 'idle', t: 0, cheerT: 0, spoken: false, love: false, hidden: this.mode !== 'gomitas' };
     if (this.mode === 'gomitas') this.placeNpc(0);
+    else if (lvl.him) Object.assign(this.npc, { hidden: false, x: lvl.him.x, y: lvl.him.y }); // menú
     else if (lvl.shadowSpots) Object.assign(this.npc, { hidden: false, shadow: true, x: lvl.shadowSpots[0].x, y: lvl.shadowSpots[0].y });
     this.arya = { x: lvl.start.x - 22, y: lvl.start.y, facing: 1, moving: false, air: false, sit: false, idleT: 0, hopT: 0, guiltyT: 0, override: null };
     this.trail = [{ x: this.arya.x, y: this.arya.y, air: false }];
@@ -708,7 +709,8 @@ export class Game {
     const pl = this.player;
     let tx;
     let ty = pl.y - 20 - h * 0.56;
-    if (this.mode === 'pipu') tx = (this.ending ? (pl.x + lvl.bed.x + 24) / 2 : pl.x + pl.facing * 22) - w / 2;
+    if (lvl.focusX) tx = lvl.focusX - w / 2;
+    else if (this.mode === 'pipu') tx = (this.ending ? (pl.x + lvl.bed.x + 24) / 2 : pl.x + pl.facing * 22) - w / 2;
     else if (this.state === 'title' || this.ending) tx = (pl.x + this.npc.x) / 2 - w / 2;
     else tx = pl.x + pl.facing * 22 - w / 2;
     tx = Math.max(0, Math.min(Math.max(0, lvl.width - w), tx));
