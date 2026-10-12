@@ -176,7 +176,8 @@ test('nivel 2: caso completo, acusaciones y final', () => {
   const events = [];
   const game = new Game(CONFIG, pipu, (name, data) => events.push({ name, data }));
   game.start();
-  assert.equal(game.npc.hidden, true, 'él no aparece hasta el final');
+  assert.ok(game.npc.shadow && !game.npc.hidden, 'él empieza como una sombra misteriosa');
+  assert.equal(game.accuse('nico').ok, false);
   assert.deepEqual(game.accuse('arya'), { ok: false, text: CONFIG.texts.pipu.needClues }, 'sin pistas no se puede acusar a Arya');
   assert.equal(game.accuse('chif').ok, false);
   assert.equal(game.wrong, 0, 'acusar sin pistas no cuenta como fallo');
@@ -204,7 +205,10 @@ test('nivel 2: caso completo, acusaciones y final', () => {
   // Acusaciones falsas: se defienden y cuentan como fallo.
   assert.equal(game.accuse('chif').text, CONFIG.texts.pipu.defense.chif);
   assert.equal(game.accuse('tiana').ok, false);
-  assert.equal(game.wrong, 2);
+  assert.equal(game.accuse('nico').text, CONFIG.texts.pipu.defense.nico);
+  assert.equal(game.wrong, 3);
+  assert.ok(events.filter((e) => e.name === 'sting').length >= 1, 'la sombra aparece y huye');
+  assert.ok(game.papers.some((p) => p.read), 'se leen notas anónimas');
   assert.equal(game.state, 'playing');
   assert.equal(game.accuse('arya').ok, true);
 
@@ -219,7 +223,8 @@ test('nivel 2: caso completo, acusaciones y final', () => {
   assert.equal(game.npc.hidden, false, 'él llega preguntando por sus gomitas');
   assert.equal(events.filter((e) => e.name === 'endingStart').length, 1, 'final una sola vez');
   assert.equal(events.filter((e) => e.name === 'won').length, 1);
-  assert.equal(events.find((e) => e.name === 'won').data.wrong, 2);
+  assert.equal(events.find((e) => e.name === 'won').data.wrong, 3);
+  assert.equal(game.npc.shadow, false, 'al final ya no es una sombra');
   assert.equal(game.accuse('arya').ok, false, 'no se puede acusar otra vez');
 
   game.start();

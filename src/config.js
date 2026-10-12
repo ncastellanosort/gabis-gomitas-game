@@ -71,6 +71,7 @@ export const CONFIG = {
         'CASO 001: el asesinato de Pipu',
         'Víctima: pingüino de peluche, chiquito y gordito',
         'Detective a cargo: Gabis. Asistente: Arya',
+        'Usa tu linterna: alguien se esconde en la oscuridad',
       ],
       cluesLabel: 'Pistas',
       // Texto bajo el contador, según cuántas pistas lleva
@@ -84,11 +85,11 @@ export const CONFIG = {
       ],
       // Cada pista: nombre, lo que dice ella al encontrarla y lo que anota en la libreta
       clues: {
-        pelos: { name: 'Pelitos naranjas', say: 'Pelitos naranjas... interesante.', note: 'El culpable es de color naranja.' },
-        huellas: { name: 'Huellas de patitas', say: '¿Parecen huellas de perrito?', note: 'Tiene patitas con almohadillas, no pezuñas.' },
-        foto: { name: 'Foto borrosa', say: 'Una foto: alguien de orejas largas.', note: 'Se ven unas orejas largas. No son puntudas.' },
-        babas: { name: 'Charco de babas', say: 'Guácala, babas. Muchas babas.', note: 'El culpable babea. Mucho.' },
-        envoltorio: { name: 'Envoltorio de gomitas', say: '¡Un paquete de gomitas vacío!', note: 'Alguien se comió un paquete entero.' },
+        pelos: { name: 'Pelitos naranjas', say: 'Pelitos naranjas... interesante.', note: 'Estaban junto a la silueta de tiza. ¿De quién son?' },
+        huellas: { name: 'Huellas de patitas', say: '¿Parecen huellas de perrito?', note: 'Salen de la escena del crimen. ¿De perrito?' },
+        foto: { name: 'Foto borrosa', say: 'Una foto: alguien de orejas largas.', note: 'Alguien de orejas largas, huyendo en la noche.' },
+        babas: { name: 'Charco de babas', say: 'Guácala, babas. Muchas babas.', note: 'Fresquitas. Alguien estuvo aquí hace poco.' },
+        envoltorio: { name: 'Envoltorio de gomitas', say: '¡Un paquete de gomitas vacío!', note: 'Un paquete entero, vacío. ¿De quién era?' },
       },
       unknownClue: '???',
       unknownNote: 'Pista sin encontrar',
@@ -96,13 +97,26 @@ export const CONFIG = {
         chif: { name: 'Chif', kind: 'zorrito' },
         tiana: { name: 'Tiana', kind: 'ovejita en pijama' },
         arya: { name: 'Arya', kind: 'tu fiel asistente' },
+        nico: { name: 'Nicolás', kind: 'el dueño de las gomitas' },
+        shadow: { name: 'La sombra', kind: 'figura misteriosa' },
       },
       // Coartadas al interrogarlos
       alibi: {
         chif: 'Yo estaba encima de la cama, acostado con el Cariñosito :(',
         tiana: 'Yo estaba en el piso porque Gabis me tiró contra la pared :(',
+        nico: 'Yo solo vine por mis gomitas. Desaparecieron esta noche.',
       },
       notAsked: 'Aún no lo has interrogado.',
+      // La sombra que huye (resulta ser Nicolás buscando sus gomitas)
+      shadowLines: ['¿Quién anda ahí?', '¡Otra vez esa sombra!', '¡Alto ahí! ¡Policía de peluches!'],
+      shadowNote: 'Huye cada vez que te acercas.',
+      nicoReveal: '¡No me acuses! Soy yo, Nicolás. Solo busco mis gomitas...',
+      // Notas anónimas clavadas por el jardín
+      papers: [
+        'Una nota: «No sigas buscando, detective.» La firma una patita.',
+        'Otra nota: «El pingüino sabía demasiado... de gomitas.»',
+        'Otra más: «Lo que buscas está calientito y arropado.»',
+      ],
       // Lo que dicen si vuelves cuando ya tienes todas las pistas
       hint: {
         chif: 'Oye... esa perrita estuvo sentada MUCHO rato en el mismo sitio.',
@@ -124,6 +138,7 @@ export const CONFIG = {
       defense: {
         chif: '¡Protesto! Mis orejas son puntudas, y la foto muestra orejas largas.',
         tiana: '¡Beee! Yo soy beige y tengo pezuñas. Mira los pelitos y las huellas.',
+        nico: '¡A mí también me robaron! Y yo no dejo pelitos naranjas ni babas.',
       },
       aryaRevealed: 'Naranjita, con patitas, orejas largas y babas... ¡¿ARYA?!',
       // Escena final

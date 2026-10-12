@@ -40,6 +40,9 @@ export class Game {
     this.wrong = 0;
     this.pipu = { state: 'hidden', t: 0 };
     this.guardCd = 0;
+    this.shadow = { i: 0, state: 'lurk' }; // la sombra que huye (nivel 2)
+    this.nico = { spoken: false };
+    this.papers = (lvl.papers || []).map((p) => ({ ...p, read: false }));
     this.hearts = lvl.hearts.map((h) => ({ ...h, collected: false }));
     this.count = 0;
     this.heartCount = 0;
@@ -50,6 +53,7 @@ export class Game {
     this.springAnim = lvl.springs.map(() => 0);
     this.npc = { spot: 0, x: lvl.start.x, y: lvl.start.y, facing: -1, state: 'idle', t: 0, cheerT: 0, spoken: false, love: false, hidden: this.mode !== 'gomitas' };
     if (this.mode === 'gomitas') this.placeNpc(0);
+    else if (lvl.shadowSpots) Object.assign(this.npc, { hidden: false, shadow: true, x: lvl.shadowSpots[0].x, y: lvl.shadowSpots[0].y });
     this.arya = { x: lvl.start.x - 22, y: lvl.start.y, facing: 1, moving: false, air: false, sit: false, idleT: 0, hopT: 0, guiltyT: 0, override: null };
     this.trail = [{ x: this.arya.x, y: this.arya.y, air: false }];
     this.idleT = 0;
@@ -485,6 +489,55 @@ export class Game {
       }
     }
     a.override = override;
+
+    // Notas anónimas: se leen al pasar.
+    this.papers.forEach((p, i) => {
+      if (p.read || Math.abs(pl.x - p.x) > 12 || Math.abs(pl.y - p.y) > 30) return;
+      p.read = true;
+      this.say('her', T.papers[i], 4.6);
+      this.emit('paper');
+    });
+
+    // La sombra: aparece a lo lejos, huye al acercarse y al final da la cara.
+    const n = this.npc;
+    const sh = this.shadow;
+    if (sh.state === 'revealed') {
+      if (Math.abs(pl.x - n.x) > 4) n.facing = pl.x < n.x ? -1 : 1;
+      return;
+    }
+    const spots = this.level.shadowSpots;
+    const last = sh.i === spots.length - 1;
+    const dx = pl.x - n.x;
+    if (n.state === 'leaving') {
+      n.t += dt;
+      if (n.t > 0.45) {
+        this.burst('puff', n.x, n.y - 12, 10, { speed: 45 });
+        this.emit('poof');
+        sh.i = Math.min(sh.i + 1, spots.length - 1);
+        Object.assign(n, { x: spots[sh.i].x, y: spots[sh.i].y, state: 'idle', t: 0 });
+      }
+    } else {
+      if (Math.abs(dx) > 4) n.facing = dx < 0 ? -1 : 1;
+      if (Math.abs(dx) < 80 && Math.abs(pl.y - n.y) < 70) {
+        if (last) {
+          sh.state = 'revealed';
+          n.shadow = false;
+          n.spoken = true;
+          this.nico.spoken = true;
+          this.burst('puff', n.x, n.y - 12, 10, { speed: 45 });
+          this.say('him', T.nicoReveal, 4.6);
+          this.emit('reveal');
+        } else {
+          this.say('her', T.shadowLines[Math.min(sh.i, T.shadowLines.length - 1)], 2.4);
+          this.emit('sting');
+          n.state = 'leaving';
+          n.t = 0;
+        }
+      } else if (!last && dx > 170) {
+        n.state = 'leaving'; // pasó de largo: la sombra se adelanta
+        n.t = 0;
+      }
+    }
   }
 
   // Acusar desde la libreta. Devuelve { ok, text }.
@@ -511,6 +564,7 @@ export class Game {
     pl.cheer = false;
     this.respawnT = 0;
     this.arya.override = { x: bed.x - 24, y: bed.y, sit: true, face: -1 };
+    Object.assign(this.npc, { hidden: true, shadow: false, state: 'idle' });
     this.arya.x = bed.x - 24;
     this.arya.y = bed.y;
     this.trail = [{ x: this.arya.x, y: this.arya.y, air: false }];

@@ -6,8 +6,8 @@ Mini videojuego de plataformas en pixel art, con dos niveles:
   encontrando gomitas por un jardín encantado y con cada una se le va pasando
   el enojo, hasta la escena final.
 - **Nivel 2 · El asesinato de Pipu**. La detective recorre el jardín de noche,
-  reúne 5 pistas, interroga a Chif y a Tiana y acusa al culpable desde su
-  libreta. Arya, su perrita, la acompaña en los dos niveles.
+  con su linterna, reúne 5 pistas, persigue a una sombra misteriosa, lee notas
+  anónimas, interroga a los sospechosos y acusa al culpable desde su libreta. Arya, su perrita, la acompaña en los dos niveles.
 
 Sin dependencias: HTML, CSS y JavaScript con Canvas 2D. Los sprites, los efectos
 de sonido y la música se generan desde el código.

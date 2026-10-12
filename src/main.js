@@ -280,8 +280,9 @@ function renderNotes() {
   const box = $('suspect-list');
   box.textContent = '';
   const all = game.count === game.total;
-  const cards = ['chif', 'tiana'];
-  if (all) cards.push(aryaRevealed ? 'arya' : 'mystery');
+  const cards = ['chif', 'tiana', 'nico'];
+  // Con todas las pistas aparece arriba la tarjeta misteriosa (el giro).
+  if (all) cards.unshift(aryaRevealed ? 'arya' : 'mystery');
   for (const id of cards) {
     const card = document.createElement('div');
     card.className = `suspect ${id}`;
@@ -289,6 +290,13 @@ function renderNotes() {
     cv.width = 18;
     cv.height = 18;
     if (id === 'arya') icon(cv, S.arya.sit);
+    else if (id === 'nico') {
+      // Hasta que da la cara, en la libreta solo es "la sombra".
+      const x = cv.getContext('2d');
+      x.drawImage((game.nico.spoken ? S.him : S.shadow).head.c, 1, 4);
+      if (game.nico.spoken) x.drawImage(S.him.faces.happy.c, 5, 9);
+      else { x.fillStyle = '#ffffff'; x.fillRect(6, 10, 2, 2); x.fillRect(11, 10, 2, 2); }
+    }
     else if (id !== 'mystery') icon(cv, S[id]);
     const info = document.createElement('div');
     info.innerHTML = '<b></b><i></i><span></span>';
@@ -301,17 +309,18 @@ function renderNotes() {
       btn.textContent = PT.revealBtn;
       btn.dataset.reveal = '1';
     } else {
-      info.children[0].textContent = PT.suspects[id].name;
-      info.children[1].textContent = PT.suspects[id].kind;
-      if (id !== 'arya') info.children[2].textContent = game.suspects[id].spoken ? `«${PT.alibi[id]}»` : PT.notAsked;
+      const known = id === 'nico' ? game.nico.spoken : id === 'arya' || game.suspects[id].spoken;
+      const who = PT.suspects[id === 'nico' && !known ? 'shadow' : id];
+      info.children[0].textContent = who.name;
+      info.children[1].textContent = who.kind;
+      if (id !== 'arya') info.children[2].textContent = known ? `«${PT.alibi[id]}»` : id === 'nico' ? PT.shadowNote : PT.notAsked;
       btn.textContent = PT.accuse;
       btn.dataset.accuse = id;
     }
     card.append(cv, info, btn);
     box.append(card);
   }
-  // Que la tarjeta nueva (la del giro) quede a la vista.
-  if (all) box.lastChild.scrollIntoView({ block: 'nearest' });
+  box.parentElement.scrollTop = 0;
 }
 
 function openNotes() {
@@ -379,6 +388,12 @@ function onGameEvent(name, data) {
   switch (name) {
     case 'jump': case 'land': case 'spring': case 'splash': case 'respawn': case 'poof': case 'talk': case 'bark': case 'burp': case 'reveal':
       audio.sfx(name);
+      break;
+    case 'sting':
+      audio.sfx('sting');
+      break;
+    case 'paper':
+      audio.sfx('page');
       break;
     case 'clue':
       audio.sfx('clue');

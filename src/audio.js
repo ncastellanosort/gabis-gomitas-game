@@ -168,6 +168,7 @@ export class AudioKit {
       case 'bark': this.tone(420, 300, 0.07, { vol: 0.2 }); this.tone(480, 330, 0.08, { vol: 0.2, at: 0.13 }); this.noise(0.06, { vol: 0.12, f0: 1500, f1: 600 }); break;
       case 'burp': this.tone(150, 70, 0.4, { wave: 'sawtooth', vol: 0.3 }); this.tone(95, 60, 0.4, { wave: 'square', vol: 0.12 }); break;
       case 'wrong': this.arp(['E5', 'C5', 'A4'], 0.1, 0.16, { vol: 0.2 }); break;
+      case 'sting': this.arp(['D#3', 'D3'], 0.22, 0.5, { wave: 'sawtooth', vol: 0.2 }); this.arp(['A4', 'G#4'], 0.22, 0.45, { wave: 'square', vol: 0.1 }); break;
       case 'page': this.noise(0.09, { vol: 0.14, f0: 3000, f1: 900 }); break;
       case 'love':
         this.arp(['C5', 'E5', 'G5', 'C6', 'E6', 'G6', 'C7'], 0.08, 0.5, { wave: 'triangle', vol: 0.26 });

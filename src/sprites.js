@@ -309,6 +309,7 @@ const CLUES = {
   envoltorio: ['p.......p', 'pp.ppp.pp', 'ppppwpppp', 'pppwwwppp', 'ppppwpppp', 'pp.ppp.pp', 'p.......p'],
 };
 const CLUE_PAL = { o: '#f08a3c', O: '#b8662e', k: '#4a3a5a', w: '#ffffff', s: '#5b6ea8', q: '#8fd3ff', Q: '#e6f6ff', p: '#ff5fa2' };
+const PAPER = ['wwwwwww', 'wkkwkkw', 'wwwwwww', 'wkkkkww', 'wwwwwww', 'wwkwkww', 'wwwkwww', 'wwwwwww'];
 const ZZZ = ['zzz', '.z.', 'zzz'];
 const NOTE = ['..n', '..n', 'nnn', 'nn.'];
 
@@ -444,6 +445,12 @@ export function buildSprites(config) {
     clues: mapRows('clue', CLUES, CLUE_PAL),
     clueGhost: mapRows('clueGhost', CLUES, Object.fromEntries(Object.keys(CLUE_PAL).map((k) => [k, '#5b4a6b']))),
     zzz: fromRows('zzz', ZZZ, { z: '#ffffff' }),
+    paper: fromRows('paper', PAPER, { w: '#fff7ea', k: '#7a4b8a' }),
+    // La sombra: su misma silueta, toda oscura
+    shadow: (() => {
+      const dark = Object.fromEntries(Object.keys(himPal).map((k) => [k, '#15122e']));
+      return { head: fromRows('shadow.head', HIM_HEAD, dark), torso: mapRows('shadow.torso', HIM_TORSO, dark), legs: mapRows('shadow.legs', HIM_LEGS, dark) };
+    })(),
     note: fromRows('note', NOTE, { n: '#ffffff' }),
     her: {
       head: fromRows('her.head', HER_HEAD, herPal),

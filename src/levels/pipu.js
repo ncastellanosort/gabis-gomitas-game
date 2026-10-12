@@ -57,5 +57,16 @@ export function createPipuLevel() {
   [19, 47, 68, 96, 126].forEach((c) => B.put('lamp', c));
   B.put('sign', 25);
 
-  return B.finish([13, 14, 15, 16, 17, 22, 54, 82, 89, 131, 132, 133, 134, 135]);
+  // La sombra: una figura misteriosa que huye cada vez que la detective se acerca.
+  // El último punto es donde por fin da la cara.
+  L.shadowSpots = [
+    { x: px(29), y: G },
+    { x: px(63), y: G },
+    { x: px(95), y: G },
+    { x: px(119), y: G },
+  ];
+  // Notas anónimas clavadas en el suelo (el texto está en config.js)
+  L.papers = [{ x: px(31.5), y: G }, { x: px(65), y: G }, { x: px(115), y: G }];
+
+  return B.finish([13, 14, 15, 16, 17, 22, 29, 31, 54, 63, 65, 82, 89, 95, 115, 119, 131, 132, 133, 134, 135]);
 }

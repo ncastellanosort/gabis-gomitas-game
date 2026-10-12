@@ -38,6 +38,7 @@ export class Renderer {
     this.cv.width = w;
     this.cv.height = h;
     this.ctx.imageSmoothingEnabled = false;
+    this.dark = makeCanvas(w, h); // capa de oscuridad para la linterna
   }
 
   // ---------- Capas pre-dibujadas ----------
@@ -342,6 +343,7 @@ export class Renderer {
       }
     }
 
+    if (night) this.flashlight(g);
     this.drawParticles(g);
 
     // Pétalos flotando (en espacio de pantalla)
@@ -353,10 +355,10 @@ export class Renderer {
     }
   }
 
-  disc(cx, cy, r) {
+  disc(cx, cy, r, ctx = this.ctx) {
     for (let dy = -r; dy <= r; dy++) {
       const half = Math.floor(Math.sqrt(r * r - dy * dy));
-      this.ctx.fillRect(cx - half, cy + dy, half * 2 + 1, 1);
+      ctx.fillRect(cx - half, cy + dy, half * 2 + 1, 1);
     }
   }
 
@@ -457,9 +459,9 @@ export class Renderer {
   drawHim(g) {
     const n = g.npc;
     if (n.hidden) return;
-    const S = this.S.him;
     const t = g.time;
     const dist = Math.abs(g.player.x - n.x);
+    const S = n.shadow ? this.S.shadow : this.S.him;
     let torso = 'hold', legs = 'stand', hop = 0, bag = [13, 9 + (Math.floor(t * 2) % 2)];
     let face = n.love ? 'love' : g.mood <= 1 ? 'nervous' : 'happy';
 
@@ -472,7 +474,7 @@ export class Renderer {
       if (n.love && g.ending.t < 4.4) { bag = [15, 8]; hop = 0; }
       else { torso = 'cheer'; legs = hop < -1 ? 'hop' : 'stand'; bag = [10, -4]; }
       if (!n.love) face = 'happy';
-    } else if (g.state === 'title' || (!n.spoken && dist < 190)) {
+    } else if (!n.shadow && (g.state === 'title' || (!n.spoken && dist < 190))) {
       torso = Math.floor(t * 5) % 2 ? 'waveA' : 'waveB';
     }
 
@@ -485,7 +487,7 @@ export class Renderer {
     ctx.drawImage(S.legs[legs][k], x, top + 20);
     ctx.drawImage(S.torso[torso][k], x, top + 8);
     ctx.drawImage(S.head[k], x, top);
-    ctx.drawImage(S.faces[face][k], x + 4, top + 5);
+    if (!n.shadow) ctx.drawImage(S.faces[face][k], x + 4, top + 5);
     // En el caso de Pipu llega con las manos vacías: se comieron el paquete.
     if (g.mode !== 'pipu') ctx.drawImage(this.S.bag[k], x + (flip ? 16 - bag[0] - 9 : bag[0]), top + bag[1]);
   }
@@ -549,6 +551,14 @@ export class Renderer {
       // Dibujados mirando a la derecha; se voltean hacia la detective.
       ctx.drawImage(sp[s.facing < 0 ? 'f' : 'c'], x, Math.round(s.y) - sp.h - this.cy - bob);
     }
+    // Notas anónimas
+    for (const pp of g.papers) {
+      const x = pp.x - this.cx, y = pp.y - this.cy;
+      if (x < -12 || x > this.w + 12) continue;
+      ctx.fillStyle = '#6e4535'; ctx.fillRect(x, y - 8, 1, 9);
+      ctx.drawImage(this.S.paper.c, x - 3, y - 15 - (pp.read ? 0 : Math.floor(t * 3) % 2));
+      if (!pp.read && Math.floor(t * 2) % 2) this.spark(x + 5, y - 17, '#fff3a6', false);
+    }
     // Camita de Arya
     const bx = lvl.bed.x - this.cx, by = lvl.bed.y - this.cy;
     if (bx < -40 || bx > this.w + 40) return;
@@ -575,6 +585,50 @@ export class Renderer {
     } else if (P.state === 'sleep') {
       ctx.fillStyle = '#b9a3e3'; ctx.fillRect(bx - 12, by - 8, 24, 3);
       ctx.fillStyle = '#d6c7f2'; ctx.fillRect(bx - 12, by - 9, 24, 1);
+    }
+  }
+
+  // ---------- La linterna de la detective ----------
+  // Oscurece la escena y abre círculos de luz alrededor de ella, de los
+  // faroles y de los personajes. Durante la fiesta final se encienden las luces.
+  flashlight(g) {
+    if (g.ending && g.ending.party) return;
+    const d = this.dark.getContext('2d');
+    const w = this.w, h = this.h, cx = this.cx, cy = this.cy;
+    d.globalCompositeOperation = 'source-over';
+    d.globalAlpha = 1;
+    d.clearRect(0, 0, w, h);
+    d.fillStyle = 'rgba(10, 8, 44, 0.66)';
+    d.fillRect(0, 0, w, h);
+    d.globalCompositeOperation = 'destination-out';
+    d.fillStyle = '#000';
+    const light = (x, y, r) => {
+      x = Math.round(x - cx); y = Math.round(y - cy);
+      if (x < -r || x > w + r || y < -r || y > h + r) return;
+      d.globalAlpha = 0.35; this.disc(x, y, r, d);
+      d.globalAlpha = 0.5; this.disc(x, y, Math.round(r * 0.8), d);
+      d.globalAlpha = 1; this.disc(x, y, Math.round(r * 0.6), d);
+    };
+    const p = g.player;
+    const flick = Math.floor(g.time * 7) % 9 === 0 ? -2 : 0;
+    light(p.x + p.facing * 14, p.y - 14, 60 + flick);
+    light(g.arya.x, g.arya.y - 7, 22);
+    for (const dc of this.level.decor) if (dc.type === 'lamp') light(dc.x, dc.y - 30, 44);
+    for (const id in g.suspects) light(g.suspects[id].x, g.suspects[id].y - 8, 26);
+    if (!g.npc.hidden && !g.npc.shadow) light(g.npc.x, g.npc.y - 14, 28);
+    light(this.level.bed.x, this.level.bed.y - 8, 30);
+    for (const c of g.clues) if (!c.collected && !c.hidden) light(c.x, c.y, 11);
+    for (const pp of g.papers) if (!pp.read) light(pp.x, pp.y - 12, 12);
+    this.ctx.drawImage(this.dark, 0, 0);
+    // Los ojos de la sombra brillan en la oscuridad.
+    const n = g.npc;
+    if (!n.hidden && n.shadow && Math.floor(g.time * 0.9 + 0.2) % 4 !== 3) {
+      const hop = n.state === 'leaving' ? -Math.round(Math.sin(Math.min(1, n.t / 0.45) * Math.PI) * 10) : 0;
+      const x = Math.round(n.x) - 8 - cx, y = Math.round(n.y) - 26 - cy + hop + 6;
+      const o = n.facing < 0 ? 0 : 1;
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillRect(x + 4 + o, y, 2, 2);
+      this.ctx.fillRect(x + 9 + o, y, 2, 2);
     }
   }
 
