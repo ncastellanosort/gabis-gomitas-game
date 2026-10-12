@@ -31,7 +31,7 @@ export const CONFIG = {
       'Bueno... una más sí me como.',
       'Error 404: enojo no encontrado.',
       'Ay, no me hagas reír...',
-      '¡Exceso de ternura detectado!',
+      'NICOLAS!',
     ],
 
     // Indicador emocional del HUD (uno por cada estado, de 0 gomitas al máximo)
