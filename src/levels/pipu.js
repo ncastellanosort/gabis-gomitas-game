@@ -44,7 +44,7 @@ export function createPipuLevel() {
   L.suspects = {
     chif: { x: px(54), y: 10 * TILE },
     tiana: { x: px(82), y: G },
-    carino: { x: px(11.5), y: G, facing: -1 }, // el testigo, junto a la escena del crimen
+    carino: { x: px(11), y: G, facing: -1 }, // el testigo, junto a la escena del crimen
   };
 
   B.hearts([

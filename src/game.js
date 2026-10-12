@@ -49,6 +49,7 @@ export class Game {
     this.mood = this.mode === 'gomitas' ? 0 : 3;
     this.particles = [];
     this.bubbles = {};
+    this.lastSaid = {}; // lo último que dijo cada quien, para poder releerlo
     this.bubbleSeq = 0;
     this.springAnim = lvl.springs.map(() => 0);
     this.npc = { spot: 0, x: lvl.start.x, y: lvl.start.y, facing: -1, state: 'idle', t: 0, cheerT: 0, spoken: false, love: false, hidden: this.mode !== 'gomitas' };
@@ -267,8 +268,10 @@ export class Game {
   }
 
   say(who, text, dur) {
+    this.lastSaid[who] = text;
     this.bubbles[who] = { text, t: dur, id: ++this.bubbleSeq };
     this.emit('talk', { who });
+    return true;
   }
 
   // ------------------------------------------------------------
@@ -398,6 +401,27 @@ export class Game {
     a.air = !a.override && air && a.moving;
     a.idleT = a.moving ? 0 : a.idleT + dt;
     a.sit = !a.moving && (wantSit || a.idleT > 1.6);
+  }
+
+  // Tocar (o hacer clic) sobre alguien vuelve a mostrar lo último que dijo;
+  // tocar una nota anónima ya leída la vuelve a mostrar. Devuelve true si mostró algo.
+  tapAt(wx, wy) {
+    if (this.state === 'title') return false;
+    const targets = [];
+    const add = (x, y, h, show) => {
+      const dx = Math.abs(wx - x);
+      if (dx < 16 && wy < y + 8 && wy > y - h - 10) targets.push({ d: dx + Math.abs(wy - (y - h / 2)) * 0.5, show });
+    };
+    const again = (who) => () => this.lastSaid[who] && this.say(who, this.lastSaid[who], 4.5);
+    add(this.player.x, this.player.y, 26, again('her'));
+    add(this.arya.x, this.arya.y, 14, again('arya'));
+    if (!this.npc.hidden && !this.npc.shadow) add(this.npc.x, this.npc.y, 28, again('him'));
+    for (const id in this.suspects) add(this.suspects[id].x, this.suspects[id].y, 20, again(id));
+    if (this.pipu.state !== 'hidden') add(this.level.bed.x, this.level.bed.y, 22, again('pipu'));
+    this.papers.forEach((p, i) => p.read && add(p.x, p.y, 18, () => this.say('her', this.config.texts.pipu.papers[i], 4.6)));
+    targets.sort((a, b) => a.d - b.d);
+    for (const t of targets) if (t.show()) return true;
+    return false;
   }
 
   // Dónde está la cabeza de cada personaje (para los globos de diálogo).

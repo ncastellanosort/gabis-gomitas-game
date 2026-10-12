@@ -100,6 +100,14 @@ function enableTouchUI() {
 $('hint').textContent = TX.hintKeyboard;
 if (window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0) enableTouchUI();
 window.addEventListener('touchstart', enableTouchUI, { once: true, passive: true });
+// Tocar o hacer clic sobre un personaje (o una nota) vuelve a mostrar su texto.
+canvas.addEventListener('pointerdown', (e) => {
+  if (paused || busy) return;
+  const r = canvas.getBoundingClientRect();
+  const wx = ((e.clientX - r.left) / r.width) * canvas.width + Math.round(game.cam.x);
+  const wy = ((e.clientY - r.top) / r.height) * canvas.height + Math.round(game.cam.y);
+  game.tapAt(wx, wy);
+});
 // Nada de menús, zoom ni desplazamientos accidentales.
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 document.addEventListener('gesturestart', (e) => e.preventDefault());

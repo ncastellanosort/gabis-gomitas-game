@@ -250,3 +250,17 @@ test('Arya acompaña en los dos niveles sin quedarse atrás', () => {
     assert.ok(far < 60, `Arya se alejó ${far.toFixed(0)}px en ${lvl.id}`);
   }
 });
+
+test('tocar a un personaje vuelve a mostrar lo último que dijo', () => {
+  const game = new Game(CONFIG, pipu);
+  game.start();
+  run(game, NONE, 0.5); // el Cariñosito da su declaración al empezar
+  const c = game.suspects.carino;
+  assert.equal(game.bubbles.carino.text, CONFIG.texts.pipu.alibi.carino);
+  run(game, NONE, 6);
+  assert.equal(game.bubbles.carino, undefined, 'el globo ya se fue');
+  assert.equal(game.tapAt(c.x + 3, c.y - 8), true);
+  assert.equal(game.bubbles.carino.text, CONFIG.texts.pipu.alibi.carino, 'vuelve a salir al tocarlo');
+  assert.equal(game.tapAt(c.x + 300, c.y - 150), false, 'tocar el vacío no hace nada');
+  assert.equal(game.tapAt(game.suspects.chif.x, game.suspects.chif.y - 8), false, 'quien no ha hablado no dice nada');
+});
