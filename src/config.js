@@ -99,14 +99,13 @@ export const CONFIG = {
         arya: { name: 'Arya', kind: 'tu fiel asistente' },
         nico: { name: 'Mi bobio', kind: 'el dueño de las gomitas' },
         shadow: { name: 'La sombra', kind: 'figura misteriosa' },
-        carino: { name: 'Cariñosito', kind: 'testigo' },
+        carino: { name: 'Cariñosito', kind: 'el último que vio a Pipu' },
       },
       // Coartadas al interrogarlos
       alibi: {
         chif: 'Yo estaba encima de la cama, acostado con el Cariñosito :(',
         tiana: 'Yo estaba en el piso porque Gabis me tiró contra la pared :(',
         nico: 'Yo solo vine por mis gomitas. Desaparecieron esta noche.',
-        // El Cariñosito no es sospechoso: es el testigo
         carino: 'Yo estaba hablando con Pipu... ¡y de repente desapareció! :(',
       },
       notAsked: 'Aún no lo has interrogado.',
@@ -138,10 +137,14 @@ export const CONFIG = {
       mysteryKind: 'Las pistas no cuadran con nadie...',
       revealBtn: '¿QUIÉN FALTA?',
       needClues: 'Te faltan pistas, detective. Sin pruebas no hay caso.',
+      needShadow: 'Falta alguien: aún no sabes quién es la sombra.',
+      findShadow: 'Tienes las pistas... pero ¿quién es esa sombra?',
+      next: 'Enter o toca para seguir',
       defense: {
         chif: '¡Protesto! Mis orejas son chiquitas y redondas, y la foto muestra orejas largas.',
         tiana: 'Guatafac, mira los pelitos y las huellas.',
         nico: '¡A mí también me robaron! Y yo no dejo pelitos naranjas ni babas.',
+        carino: '¡Qué falta de respeto! Soy azul, no naranja. Y yo no babeo.',
       },
       aryaRevealed: 'Naranjita, con patitas, orejas largas y babas... ¡¿ARYA?!',
       // Escena final

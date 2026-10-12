@@ -156,7 +156,9 @@ test('nivel 2: todas las pistas son alcanzables (incluida la que tapa Arya)', ()
     { name: 'acercarse a las babas', x: babas.x, test: nearX(babas.x - 40, 12) },
     { name: 'alejarse', x: babas.x - 150, test: nearX(babas.x - 150, 12) },
     { name: 'babas', x: babas.x, test: touches(babas) },
-    { name: 'envoltorio', x: envoltorio.x, test: touches(envoltorio) },
+    // Se exige tocarlo desde arriba de la nube, para que la ruta pueda continuar.
+    { name: 'envoltorio', x: envoltorio.x, test: (p) => touches(envoltorio)(p) && p.y <= envoltorio.ground },
+    { name: 'sombra', x: pipu.shadowSpots[3].x, test: nearX(pipu.shadowSpots[3].x - 40, 12) },
   ]);
   assert.ok(caseRoute.ok, `tramo imposible: ${caseRoute.failed}`);
 });
@@ -194,6 +196,15 @@ test('nivel 2: caso completo, acusaciones y final', () => {
       hiddenTaken = hiddenTaken || babas.collected;
     }
     if (leg.name === 'alejarse') assert.equal(game.clues[3].hidden, false, 'al alejarse, Arya se levanta y la pista aparece');
+    if (leg.name === 'envoltorio') {
+      // Con las 5 pistas pero sin saber quién es la sombra, todavía no se puede acusar.
+      assert.equal(game.count, 5);
+      assert.equal(game.canAccuse, false);
+      assert.equal(game.accuse('arya').text, CONFIG.texts.pipu.needShadow);
+      assert.equal(events.filter((e) => e.name === 'allClues').length, 0, 'el aviso de acusar espera a que aparezca él');
+      game.startCaseEnding();
+      assert.equal(game.state, 'playing');
+    }
   }
   assert.ok(!hiddenTaken, 'la pista tapada no se puede recoger');
   assert.equal(game.count, 5, 'recoge las 5 pistas');
@@ -205,8 +216,10 @@ test('nivel 2: caso completo, acusaciones y final', () => {
   // Acusaciones falsas: se defienden y cuentan como fallo.
   assert.equal(game.accuse('chif').text, CONFIG.texts.pipu.defense.chif);
   assert.equal(game.accuse('tiana').ok, false);
+  assert.ok(game.nico.spoken && game.canAccuse, 'tras desenmascarar a la sombra ya se puede acusar');
   assert.equal(game.accuse('nico').text, CONFIG.texts.pipu.defense.nico);
-  assert.equal(game.wrong, 3);
+  assert.equal(game.accuse('carino').text, CONFIG.texts.pipu.defense.carino);
+  assert.equal(game.wrong, 4);
   assert.ok(events.filter((e) => e.name === 'sting').length >= 1, 'la sombra aparece y huye');
   assert.ok(game.papers.some((p) => p.read), 'se leen notas anónimas');
   assert.equal(game.state, 'playing');
@@ -225,7 +238,7 @@ test('nivel 2: caso completo, acusaciones y final', () => {
   assert.equal(game.npc.hidden, false, 'él llega preguntando por sus gomitas');
   assert.equal(events.filter((e) => e.name === 'endingStart').length, 1, 'final una sola vez');
   assert.equal(events.filter((e) => e.name === 'won').length, 1);
-  assert.equal(events.find((e) => e.name === 'won').data.wrong, 3);
+  assert.equal(events.find((e) => e.name === 'won').data.wrong, 4);
   assert.equal(game.npc.shadow, false, 'al final ya no es una sombra');
   assert.equal(game.accuse('arya').ok, false, 'no se puede acusar otra vez');
 

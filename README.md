@@ -35,6 +35,7 @@ módulos de JavaScript en archivos locales.
 | Saltar (mantener = salto más alto) | Espacio, W o ↑ | Botón SALTAR |
 | Libreta de la detective (nivel 2) | L o E | Botón de libreta |
 | Releer lo que dijo alguien | Clic sobre el personaje | Tocar al personaje |
+| Cerrar el primer plano de quien habla (nivel 2) | Enter o Espacio | Tocar la pantalla |
 | Pausa | P o Esc | Botón de pausa |
 | Silenciar | M | Botón de sonido |
 

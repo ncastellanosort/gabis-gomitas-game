@@ -334,6 +334,37 @@ body {
 .card .stats { margin: 0; font-size: max(10px, calc(var(--u) * 1.75)); color: #7a4b8a; }
 .card .note:empty { display: none; }
 
+/* ---------- Primer plano de quien habla ---------- */
+#closeup {
+  z-index: 7;
+  padding: 0 calc(var(--u) * 2) calc(var(--u) * 2);
+  justify-content: space-between;
+  cursor: pointer;
+  background: radial-gradient(circle at 50% 36%, rgba(96, 84, 170, 0.82), rgba(14, 10, 40, 0.95) 62%);
+  animation: screen-in 0.2s steps(4);
+}
+.cu-stage { flex: 1 1 auto; min-height: 0; display: grid; place-items: center; }
+#cu-face {
+  width: calc(var(--u) * 31);
+  height: calc(var(--u) * 31);
+  image-rendering: pixelated;
+  filter: drop-shadow(0 calc(var(--u) * 1) 0 rgba(10, 8, 36, 0.6));
+  animation: cu-pop 0.3s steps(5), cu-talk 0.5s steps(2) 0.3s infinite;
+}
+@keyframes cu-pop { from { transform: scale(0.3); opacity: 0; } }
+@keyframes cu-talk { 50% { transform: translateY(calc(var(--u) * -0.7)); } }
+.cu-box {
+  position: relative;
+  width: min(100%, calc(var(--u) * 92));
+  padding: calc(var(--u) * 1.4) calc(var(--u) * 2.4) calc(var(--u) * 2.8);
+  text-align: left;
+}
+#cu-name { display: block; font-size: max(13px, calc(var(--u) * 2.6)); color: var(--pink-dark); margin-bottom: calc(var(--u) * 0.5); }
+#cu-text { margin: 0; font-size: max(13px, calc(var(--u) * 2.9)); line-height: 1.25; }
+#cu-next { position: absolute; right: calc(var(--u) * 2); bottom: calc(var(--u) * 0.8); font-size: max(10px, calc(var(--u) * 1.6)); color: #7a4b8a; animation: pulse 0.9s steps(2) infinite; }
+@keyframes cu-blink { 50% { opacity: 0.3; } }
+#cu-next { animation: cu-blink 0.9s steps(2) infinite; }
+
 /* ---------- Libreta de la detective ---------- */
 .btn.small { font-size: max(11px, calc(var(--u) * 2)); padding: calc(var(--u) * 0.7) calc(var(--u) * 1.4); min-width: 0; box-shadow: 0 calc(var(--u) * 0.5) 0 var(--pink-dark), 0 calc(var(--u) * 0.5) 0 max(2px, calc(var(--u) * 0.45)) var(--ink); }
 .icon-btn.notes.ready { background: var(--yellow); animation: pulse 0.7s steps(2) infinite; }

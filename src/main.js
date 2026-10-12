@@ -25,6 +25,8 @@ let level = levels.menu;
 
 let paused = false;
 let notesOpen = false;
+let talkOpen = false; // primer plano de quien habla
+let talkAt = 0;
 let aryaRevealed = false;
 let busy = false; // transición en curso
 let view = { scale: 1, css: 1, left: 0, top: 0 };
@@ -86,6 +88,7 @@ function icon(c, sp) {
 input.bindPad($('pad-move'));
 input.bindPad($('pad-jump'));
 input.onAction = (a) => {
+  if (talkOpen) return; // el primer plano se cierra con Enter o un toque
   if (a === 'pause') { if (notesOpen) closeNotes(); else togglePause(); }
   else if (a === 'mute') toggleSound();
   else if (a === 'notes') { if (notesOpen) closeNotes(); else openNotes(); }
@@ -167,7 +170,8 @@ function updateHud(pop) {
   });
   $('gomitas-text').textContent = `${pipu ? PT.cluesLabel : TX.gomitasLabel}: ${game.count} / ${game.total}`;
   $('mood-text').textContent = pipu ? PT.phases[Math.min(game.count, PT.phases.length - 1)] : TX.moods[game.mood];
-  $('btn-notes').classList.toggle('ready', pipu && game.count === game.total);
+  if (pipu && game.count === game.total && !game.canAccuse) $('mood-text').textContent = PT.findShadow;
+  $('btn-notes').classList.toggle('ready', game.canAccuse);
   $('hearts-text').textContent = `${game.heartCount}`;
   drawPortrait();
   if (pop) {
@@ -266,6 +270,57 @@ function syncBubbles() {
 }
 
 // ------------------------------------------------------------
+// Primer plano: cuando habla un testigo o sospechoso del nivel 2, la cámara
+// corta a su carita en grande con el texto abajo. Enter o un toque para seguir.
+// ------------------------------------------------------------
+const CLOSEUP = new Set(['chif', 'tiana', 'carino', 'him']);
+function openCloseup(who) {
+  const b = game.bubbles[who];
+  if (!b) return;
+  delete game.bubbles[who]; // el texto va en el primer plano, no en el globo
+  const S = renderer.S;
+  const cv = $('cu-face');
+  const x = cv.getContext('2d');
+  x.clearRect(0, 0, 20, 20);
+  if (who === 'him') {
+    x.drawImage(S.him.torso.hold.c, 2, 12);
+    x.drawImage(S.him.head.c, 2, 4);
+    x.drawImage(S.him.faces.nervous.c, 6, 9);
+  } else icon(cv, S[who]);
+  $('cu-name').textContent = PT.suspects[who === 'him' ? 'nico' : who].name;
+  $('cu-text').textContent = b.text;
+  $('cu-next').textContent = PT.next;
+  paused = true;
+  talkOpen = true;
+  talkAt = performance.now();
+  input.clear();
+  const el = $('closeup');
+  el.hidden = true;
+  void el.offsetWidth; // reinicia la animación de entrada
+  el.hidden = false;
+  setBodyState();
+}
+
+function closeCloseup() {
+  // Un pequeño margen para que el mismo toque que lo abrió no lo cierre.
+  if (!talkOpen || performance.now() - talkAt < 350) return;
+  talkOpen = false;
+  paused = false;
+  $('closeup').hidden = true;
+  input.clear();
+  last = performance.now();
+  setBodyState();
+}
+$('closeup').addEventListener('click', closeCloseup);
+window.addEventListener('keydown', (e) => {
+  if (!talkOpen || e.repeat) return;
+  if (e.code === 'Enter' || e.code === 'Space' || e.code === 'Escape' || e.code === 'NumpadEnter') {
+    e.preventDefault();
+    closeCloseup();
+  }
+});
+
+// ------------------------------------------------------------
 // Libreta de la detective: pistas, sospechosos y acusación
 // ------------------------------------------------------------
 function renderNotes() {
@@ -289,7 +344,7 @@ function renderNotes() {
   }
   const box = $('suspect-list');
   box.textContent = '';
-  const all = game.count === game.total;
+  const all = game.canAccuse;
   const cards = ['chif', 'tiana', 'nico', 'carino'];
   // Con todas las pistas aparece arriba la tarjeta misteriosa (el giro).
   if (all) cards.unshift(aryaRevealed ? 'arya' : 'mystery');
@@ -327,8 +382,7 @@ function renderNotes() {
       btn.textContent = PT.accuse;
       btn.dataset.accuse = id;
     }
-    card.append(cv, info);
-    if (id !== 'carino') card.append(btn); // al testigo no se le acusa
+    card.append(cv, info, btn);
     box.append(card);
   }
   box.parentElement.scrollTop = 0;
@@ -397,7 +451,11 @@ $('btn-notes-close').addEventListener('click', closeNotes);
 // ------------------------------------------------------------
 function onGameEvent(name, data) {
   switch (name) {
-    case 'jump': case 'land': case 'spring': case 'splash': case 'respawn': case 'poof': case 'talk': case 'bark': case 'burp': case 'reveal':
+    case 'talk':
+      audio.sfx('talk');
+      if (game.mode === 'pipu' && game.state === 'playing' && CLOSEUP.has(data.who)) openCloseup(data.who);
+      break;
+    case 'jump': case 'land': case 'spring': case 'splash': case 'respawn': case 'poof': case 'bark': case 'burp': case 'reveal':
       audio.sfx(name);
       break;
     case 'sting':
@@ -410,7 +468,12 @@ function onGameEvent(name, data) {
       audio.sfx('clue');
       updateHud(true);
       break;
+    case 'needShadow':
+      toast(PT.findShadow);
+      updateHud(false);
+      break;
     case 'allClues':
+      updateHud(false);
       setTimeout(() => audio.sfx('celebrate'), 450);
       toast(PT.allClues);
       break;
@@ -504,7 +567,8 @@ function hideScreens() {
   aryaRevealed = false;
   clearToasts();
   input.clear();
-  for (const id of ['screen-title', 'screen-pause', 'screen-win', 'screen-notes', 'win-card']) $(id).hidden = true;
+  talkOpen = false;
+  for (const id of ['screen-title', 'screen-pause', 'screen-win', 'screen-notes', 'closeup', 'win-card']) $(id).hidden = true;
   $('bigtext').textContent = '';
 }
 
@@ -533,7 +597,7 @@ function toMenu() {
 }
 
 function setPaused(p, title = TX.pauseTitle) {
-  if (notesOpen) return;
+  if (notesOpen || talkOpen) return;
   if (p === paused || (p && game.state !== 'playing') || busy) return;
   paused = p;
   input.clear();
@@ -616,7 +680,7 @@ function frame(now) {
     acc += dt;
     const inp = input.state();
     let n = 0;
-    while (acc >= STEP && n < 16) {
+    while (acc >= STEP && n < 16 && !paused) {
       game.step(STEP, inp);
       acc -= STEP;
       n++;

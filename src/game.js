@@ -74,6 +74,11 @@ export class Game {
     this.emit('start');
   }
 
+  // Para acusar hacen falta todas las pistas y haber desenmascarado a la sombra.
+  get canAccuse() {
+    return this.mode === 'pipu' && this.count === this.total && this.nico.spoken;
+  }
+
   get total() {
     return this.mode === 'pipu' ? this.clues.length : this.gomitas.length;
   }
@@ -455,7 +460,7 @@ export class Game {
     this.burst('spark', c.x, c.y, 8, { color: '#ffffff', speed: 60 });
     this.say('her', this.config.texts.pipu.clues[c.kind].say, 3.4);
     this.emit('clue', { count: this.count, total: this.total, kind: c.kind });
-    if (this.count === this.total) this.emit('allClues');
+    if (this.count === this.total) this.emit(this.canAccuse ? 'allClues' : 'needShadow');
   }
 
   updateCase(dt) {
@@ -549,6 +554,7 @@ export class Game {
           n.shadow = false;
           n.spoken = true;
           this.nico.spoken = true;
+          if (this.count === this.total) this.emit('allClues');
           this.burst('puff', n.x, n.y - 12, 10, { speed: 45 });
           this.say('him', T.nicoReveal, 4.6);
           this.emit('reveal');
@@ -570,6 +576,7 @@ export class Game {
     const T = this.config.texts.pipu;
     if (this.state !== 'playing' || this.ending) return { ok: false, text: '' };
     if (this.count < this.total) return { ok: false, text: T.needClues };
+    if (!this.nico.spoken) return { ok: false, text: T.needShadow };
     if (who !== 'arya') {
       this.wrong++;
       return { ok: false, text: T.defense[who] };
@@ -579,7 +586,7 @@ export class Game {
 
   // Escena final del caso: corte a la camita de Arya. Solo una vez.
   startCaseEnding() {
-    if (this.ending || this.count < this.total) return;
+    if (this.ending || !this.canAccuse) return;
     const bed = this.level.bed;
     const pl = this.player;
     this.ending = { t: 0, done: {} };
