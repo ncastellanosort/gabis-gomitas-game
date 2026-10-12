@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#8ecbff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Gomitas of Love</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6' shape-rendering='crispEdges'%3E%3Cpath fill='%23ff4d6d' d='M1 0h2v1h1V0h2v1h1v2H6v1H5v1H4v1H3V5H2V4H1V3H0V1h1z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="state-title">
+  <div id="app">
+    <div id="stage">
+      <canvas id="game" aria-label="Gomitas of Love: juego de plataformas"></canvas>
+
+      <!-- Globos de diálogo -->
+      <div class="bubble" id="bubble-her" hidden></div>
+      <div class="bubble him" id="bubble-him" hidden></div>
+
+      <!-- HUD -->
+      <div id="hud" hidden>
+        <div class="hud-left panel">
+          <div class="hud-row">
+            <span id="slots"></span>
+            <span id="gomitas-text">Gomitas: 0 / 5</span>
+          </div>
+          <div class="hud-row mood">
+            <canvas id="portrait" width="16" height="14"></canvas>
+            <span id="mood-text"></span>
+          </div>
+        </div>
+        <div class="hud-right">
+          <span class="panel hearts" id="hearts-box"><i class="pix-heart"></i><span id="hearts-text">0</span></span>
+          <button class="icon-btn" id="btn-pause" aria-label="Pausa">
+            <svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M1 1h2v6H1zM5 1h2v6H5z"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-restart" aria-label="Reiniciar">
+            <svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M2 1h4v1h1v1H6V2H2v4h3V5h1v1H5v1H2V6H1V2h1zM5 2h2v2H5z"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-sound" aria-label="Sonido">
+            <svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M1 3h2V2h1V1h1v6H4V6H3V5H1z"/><path class="waves" d="M6 2h1v1H6zM6 5h1v1H6zM7 3h1v2H7z"/><path class="cross" d="M6 3h1v1H6zM7 4h1v1H7zM7 2h1v1H7zM6 5h1v1H6z"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-full" aria-label="Pantalla completa">
+            <svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M1 1h2v1H2v1H1zM5 1h2v2H6V2H5zM1 5h1v1h1v1H1zM6 5h1v2H5V6h1z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="toast" class="panel" hidden></div>
+
+      <!-- Pantalla de inicio -->
+      <section class="screen" id="screen-title">
+        <h1 class="logo"><canvas class="logo-gomita" width="12" height="14"></canvas><span id="title-text">Gomitas of Love</span><canvas class="logo-gomita" width="12" height="14"></canvas></h1>
+        <p class="subtitle" id="subtitle"></p>
+        <button class="btn big" id="btn-play">JUGAR</button>
+        <p class="hint" id="hint"></p>
+        <p class="hint rotate" id="rotate-hint"></p>
+      </section>
+
+      <!-- Pausa -->
+      <section class="screen dim" id="screen-pause" hidden>
+        <div class="panel card">
+          <h2 id="pause-title">PAUSA</h2>
+          <button class="btn" id="btn-resume">CONTINUAR</button>
+          <button class="btn alt" id="btn-restart2">REINICIAR</button>
+          <button class="btn alt" id="btn-sound2">SONIDO</button>
+        </div>
+      </section>
+
+      <!-- Final -->
+      <section class="screen" id="screen-win" hidden>
+        <div id="bigtext" aria-live="polite"></div>
+        <div class="panel card win" id="win-card" hidden>
+          <div class="win-text">
+            <p id="final-message"></p>
+            <p class="note" id="final-note"></p>
+            <p class="stats" id="final-stats"></p>
+          </div>
+          <button class="btn big" id="btn-replay">VOLVER A JUGAR</button>
+        </div>
+      </section>
+
+      <div id="fade"></div>
+    </div>
+
+    <!-- Controles táctiles -->
+    <div id="touch" hidden>
+      <div class="pad" id="pad-move">
+        <button class="tbtn" data-action="left" aria-label="Izquierda"><svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M5 1h1v6H5V6H4V5H3V3h1V2h1zM2 3h1v2H2z"/></svg></button>
+        <button class="tbtn" data-action="right" aria-label="Derecha"><svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M2 1h1v1h1v1h1v2H4v1H3v1H2zM5 3h1v2H5z"/></svg></button>
+      </div>
+      <div class="pad" id="pad-jump">
+        <button class="tbtn jump" data-action="jump" aria-label="Saltar"><svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M3 1h2v1h1v1h1v1H5v3H3V4H1V3h1V2h1z"/></svg><span>SALTAR</span></button>
+      </div>
+    </div>
+  </div>
+
+  <noscript>Este juego necesita JavaScript.</noscript>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

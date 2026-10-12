@@ -1,0 +1,443 @@
+// Dibuja el mundo en un canvas de baja resolución (pixel art nítido).
+
+import { TILE, T, hash2 } from './level.js';
+import { buildSprites, makeCanvas } from './sprites.js';
+import { REACT_TIME } from './game.js';
+
+const SKY = ['#8ecbff', '#9ed4ff', '#afdcff', '#c1e5ff', '#d4ecff', '#e6f0ff', '#f6eefc', '#ffe9f3', '#ffdfeb'];
+const BG_W = 512;
+
+export class Renderer {
+  constructor(canvas, level, config) {
+    this.cv = canvas;
+    this.ctx = canvas.getContext('2d', { alpha: false });
+    this.level = level;
+    this.S = buildSprites(config);
+    this.world = this.buildWorld();
+    this.far = this.buildHills(150, [[18, 2, 1], [9, 5, 2.3]], '#c9b6ee', '#ddd0f7', false);
+    this.mid = this.buildHills(176, [[12, 3, 0.5], [5, 7, 4]], '#a6e3b8', '#c6f2cf', true);
+    this.clouds = Array.from({ length: 8 }, (_, i) => ({
+      x: i * 95 + hash2(i, 1) * 50, y: 8 + hash2(i, 2) * 70, v: 2 + hash2(i, 3) * 4, s: i % 3,
+    }));
+    this.butterflies = Array.from({ length: 12 }, (_, i) => ({
+      x: 120 + i * 270 + hash2(i, 4) * 120, y: 120 + hash2(i, 5) * 50, c: i % 3, ph: hash2(i, 6) * 10,
+    }));
+    this.resize(320, 180);
+  }
+
+  resize(w, h) {
+    this.cv.width = w;
+    this.cv.height = h;
+    this.ctx.imageSmoothingEnabled = false;
+  }
+
+  // ---------- Capas pre-dibujadas ----------
+  buildHills(base, waves, color, light, withTrees) {
+    const H = this.level.height;
+    const c = makeCanvas(BG_W, H);
+    const x = c.getContext('2d');
+    const top = (px) => Math.round(base + waves.reduce((s, [a, k, ph]) => s + a * Math.sin((px / BG_W) * Math.PI * 2 * k + ph), 0));
+    if (withTrees) {
+      for (let i = 0; i < 9; i++) {
+        const px = Math.floor(i * (BG_W / 9) + hash2(i, 11) * 30);
+        const y = top(px);
+        const r = 5 + Math.floor(hash2(i, 12) * 4);
+        x.fillStyle = '#9a86b8';
+        x.fillRect(px, y - 8, 2, 10);
+        x.fillStyle = i % 2 ? '#ffb7d3' : '#8ed6a8';
+        for (let dy = -r; dy <= r; dy++) {
+          const half = Math.floor(Math.sqrt(r * r - dy * dy));
+          x.fillRect(px + 1 - half, y - 8 - r + dy, half * 2, 1);
+        }
+        x.fillStyle = i % 2 ? '#ffd3e5' : '#b4ecc6';
+        x.fillRect(px - 2, y - 11 - r, 3, 2);
+      }
+    }
+    for (let px = 0; px < BG_W; px++) {
+      const y = top(px);
+      x.fillStyle = color;
+      x.fillRect(px, y, 1, H - y);
+      x.fillStyle = light;
+      x.fillRect(px, y, 1, 2);
+    }
+    return c;
+  }
+
+  buildWorld() {
+    const lvl = this.level;
+    const c = makeCanvas(lvl.width, lvl.height);
+    const x = c.getContext('2d');
+    for (const s of lvl.shades) {
+      x.fillStyle = 'rgba(72, 48, 110, 0.32)';
+      x.fillRect(s.x, s.y, s.w, s.h);
+    }
+    for (let r = 0; r < lvl.rows; r++) {
+      for (let col = 0; col < lvl.cols; col++) {
+        const t = lvl.tileAt(col, r);
+        if (t === T.SOLID) this.paintGround(x, col, r);
+        else if (t === T.WOOD) this.paintWood(x, col, r);
+        else if (t === T.CLOUD) this.paintCloud(x, col, r);
+      }
+    }
+    return c;
+  }
+
+  paintGround(x, col, row) {
+    const lvl = this.level;
+    const solid = (c, r) => (r >= lvl.rows ? true : lvl.isSolid(c, r));
+    const up = solid(col, row - 1), dn = solid(col, row + 1), lf = solid(col - 1, row), rt = solid(col + 1, row);
+    const x0 = col * TILE, y0 = row * TILE;
+    for (let py = 0; py < TILE; py++) {
+      for (let px = 0; px < TILE; px++) {
+        const wx = x0 + px, wy = y0 + py;
+        const n = hash2(wx, wy);
+        let color = wy > 216 ? '#c1876b' : '#c98f72';
+        if (n < 0.035) color = '#d9a585';
+        // piedritas sueltas en vez de ruido fino
+        const stone = hash2(Math.floor(wx / 4), Math.floor(wy / 3) + 40);
+        if (stone > 0.955) color = (wx % 4 === 3 || wy % 3 === 2) ? '#a96d52' : '#b57a5d';
+        if ((!lf && px === 0) || (!rt && px === 15) || (!dn && py === 15)) color = '#8a5a48';
+        if (!up) {
+          const depth = 4 + [0, 0, 1, 2, 2, 1][wx % 6];
+          if (py === 0 && ((!lf && px === 0) || (!rt && px === 15))) continue;
+          if (py === 0) color = '#c9f7b0';
+          else if (py < depth - 1) color = hash2(wx, wy + 9) > 0.9 ? '#a6eca0' : '#86db8f';
+          else if (py === depth - 1) color = '#55b877';
+          else if (py === depth) color = '#b07558';
+        }
+        x.fillStyle = color;
+        x.fillRect(wx, wy, 1, 1);
+      }
+    }
+  }
+
+  paintWood(x, col, row) {
+    const lvl = this.level;
+    const lf = lvl.tileAt(col - 1, row) === T.WOOD, rt = lvl.tileAt(col + 1, row) === T.WOOD;
+    const x0 = col * TILE, y0 = row * TILE;
+    const rows = ['#fff0f6', '#ffc2da', '#ffb3d1', '#ffb3d1', '#ff8fbd', '#d95f95'];
+    for (let py = 0; py < 6; py++) {
+      for (let px = 0; px < TILE; px++) {
+        const edgeL = !lf && px === 0, edgeR = !rt && px === 15;
+        if ((edgeL || edgeR) && (py === 0 || py === 5)) continue;
+        let color = rows[py];
+        if (edgeL || edgeR) color = '#b8457a';
+        else if (px % 8 === 7 && py > 0 && py < 5) color = '#ff8fbd';
+        x.fillStyle = color;
+        x.fillRect(x0 + px, y0 + py, 1, 1);
+      }
+    }
+    // corazoncito tallado y soportes
+    x.fillStyle = '#ffffff';
+    x.fillRect(x0 + 3, y0 + 2, 1, 1); x.fillRect(x0 + 5, y0 + 2, 1, 1); x.fillRect(x0 + 4, y0 + 3, 1, 1);
+    x.fillStyle = '#b8457a';
+    if (!lf) { x.fillRect(x0 + 2, y0 + 6, 3, 1); x.fillRect(x0 + 2, y0 + 7, 2, 1); x.fillRect(x0 + 2, y0 + 8, 1, 1); }
+    if (!rt) { x.fillRect(x0 + 11, y0 + 6, 3, 1); x.fillRect(x0 + 12, y0 + 7, 2, 1); x.fillRect(x0 + 13, y0 + 8, 1, 1); }
+  }
+
+  paintCloud(x, col, row) {
+    const lvl = this.level;
+    const lf = lvl.tileAt(col - 1, row) === T.CLOUD, rt = lvl.tileAt(col + 1, row) === T.CLOUD;
+    const x0 = col * TILE, y0 = row * TILE;
+    const bump = [2, 1, 0, 0, 0, 0, 1, 2, 2, 1, 0, 0, 0, 0, 1, 2];
+    for (let px = 0; px < TILE; px++) {
+      let top = bump[px], bottom = 10 - [0, 1, 1, 0][px % 4];
+      if (!lf) { top += [5, 3, 1][px] || 0; bottom -= [3, 1][px] || 0; }
+      if (!rt) { top += [5, 3, 1][15 - px] || 0; bottom -= [3, 1][15 - px] || 0; }
+      for (let py = top; py <= bottom; py++) {
+        x.fillStyle = py === bottom ? '#a9c6ef' : py >= bottom - 2 ? '#dbe9ff' : '#ffffff';
+        x.fillRect(x0 + px, y0 + py, 1, 1);
+      }
+    }
+  }
+
+  // ---------- Cuadro completo ----------
+  draw(g) {
+    const ctx = this.ctx;
+    const w = this.cv.width, h = this.cv.height;
+    const lvl = this.level;
+    const cx = Math.round(g.cam.x), cy = Math.round(g.cam.y);
+    const t = g.time;
+    this.g = g; this.cx = cx; this.cy = cy; this.w = w; this.h = h;
+
+    // Cielo en franjas
+    const band = Math.ceil((h * 0.85) / SKY.length);
+    SKY.forEach((c, i) => {
+      ctx.fillStyle = c;
+      ctx.fillRect(0, i * band, w, i === SKY.length - 1 ? h : band);
+    });
+    // Sol
+    const sx = Math.round(w * 0.8), sy = 30 - Math.round(cy * 0.05);
+    ctx.fillStyle = '#fff9dc'; this.disc(sx, sy, 15);
+    ctx.fillStyle = '#fff2b0'; this.disc(sx, sy, 11);
+
+    // Nubes y colinas con parallax
+    for (const c of this.clouds) {
+      const P = w + 160;
+      const x = ((((c.x * 1.7 - cx * 0.12 + t * c.v) % P) + P) % P) - 80;
+      ctx.drawImage(this.S.clouds[c.s], Math.round(x), Math.round(c.y - cy * 0.08));
+    }
+    const cyMax = lvl.height - h;
+    this.tiled(this.far, 0.2, h - lvl.height + Math.round((cyMax - cy) * 0.75));
+    this.tiled(this.mid, 0.45, h - lvl.height + Math.round((cyMax - cy) * 0.45));
+
+    // Decoración de fondo, mundo, decoración frontal
+    for (const d of lvl.decor) {
+      const x = d.x - cx;
+      if (x < -50 || x > w + 50) continue;
+      if (d.type === 'tree') { const s = this.S.trees[d.variant]; ctx.drawImage(s, x - (s.width >> 1), d.y - cy - s.height + 2); }
+      else if (d.type === 'bush') { const s = this.S.bushes[d.variant]; ctx.drawImage(s, x - (s.width >> 1), d.y - cy - s.height + 2); }
+    }
+    this.garland(t);
+    ctx.drawImage(this.world, cx, cy, w, h, 0, 0, w, h);
+    for (const d of lvl.decor) {
+      const x = d.x - cx;
+      if (x < -20 || x > w + 20) continue;
+      if (d.type === 'flower') {
+        const f = this.S.flowers[d.variant][Math.sin(t * 1.6 + d.phase) > 0.3 ? 1 : 0];
+        ctx.drawImage(f.c, x - 3, d.y - cy - f.h + 1);
+      } else if (d.type === 'tuft') ctx.drawImage(this.S.tuft.c, x - 3, d.y - cy - 3);
+      else if (d.type === 'sign') ctx.drawImage(this.S.sign.c, x - 7, d.y - cy - 15);
+    }
+    for (const b of this.butterflies) {
+      const x = Math.round(b.x + Math.sin(t * 0.7 + b.ph) * 30 - cx);
+      if (x < -10 || x > w + 10) continue;
+      const y = Math.round(b.y + Math.sin(t * 1.9 + b.ph) * 9 - cy);
+      ctx.drawImage(this.S.butterflies[b.c][Math.floor(t * 8 + b.ph) % 2].c, x, y);
+    }
+
+    // Honguitos
+    lvl.springs.forEach((s, i) => {
+      const down = g.springAnim[i] > 0.18;
+      const sp = this.S.spring[down ? 1 : 0];
+      ctx.drawImage(sp.c, s.x - 8 - cx, s.base - sp.h - cy);
+    });
+
+    // Corazoncitos y gomitas
+    for (let i = 0; i < g.hearts.length; i++) {
+      const hh = g.hearts[i];
+      if (hh.collected) continue;
+      const x = hh.x - cx;
+      if (x < -10 || x > w + 10) continue;
+      ctx.drawImage(this.S.hearts[1].c, x - 3, Math.round(hh.y - 3 + Math.sin(t * 3 + i) * 1.5) - cy);
+    }
+    g.gomitas.forEach((gm, i) => {
+      if (gm.collected) return;
+      const x = gm.x - cx;
+      if (x < -20 || x > w + 20) return;
+      const y = Math.round(gm.y + Math.sin(t * 2.6 + i * 1.3) * 3) - cy;
+      const pulse = Math.floor(t * 3 + i) % 2;
+      const gl = this.S.glow[pulse];
+      ctx.globalAlpha = 0.38;
+      ctx.drawImage(gl, x - (gl.width >> 1), y - (gl.height >> 1));
+      ctx.globalAlpha = 1;
+      const sp = this.S.gomitas[gm.color % this.S.gomitas.length];
+      ctx.drawImage(sp.c, x - 6, y - 7);
+      // destellos que giran alrededor
+      for (let k = 0; k < 3; k++) {
+        const a = t * 2.2 + (k * Math.PI * 2) / 3 + i;
+        if (Math.floor(t * 6 + k) % 3 === 0) continue;
+        this.spark(Math.round(x + Math.cos(a) * 12), Math.round(y + Math.sin(a) * 10), '#ffffff', k === 0);
+      }
+    });
+
+    this.drawHim(g);
+    this.drawHer(g);
+    if (g.ending && g.ending.love) {
+      const mx = Math.round((g.player.x + g.npc.x) / 2) - cx;
+      const up = Math.min(1, (g.ending.t - 3) / 1.2);
+      const y = Math.round(g.player.y - 34 - up * 14 + Math.sin(t * 3) * 2) - cy;
+      const hb = this.S.heartBig;
+      if (Math.floor(t * 4) % 4 === 0) ctx.drawImage(hb.c, 0, 0, hb.w, hb.h, mx - 8, y - 1, hb.w + 2, hb.h + 2);
+      else ctx.drawImage(hb.c, mx - 7, y);
+    }
+
+    // Agua
+    for (const [c0, c1] of lvl.pits) {
+      const x0 = c0 * TILE - cx, x1 = (c1 + 1) * TILE - cx;
+      if (x1 < 0 || x0 > w) continue;
+      const wy = lvl.waterY - cy;
+      const a = Math.max(0, x0), b = Math.min(w, x1);
+      ctx.fillStyle = '#7fc8f8'; ctx.fillRect(a, wy + 1, b - a, h - wy);
+      ctx.fillStyle = '#62b3ee'; ctx.fillRect(a, wy + 12, b - a, h - wy);
+      for (let x = a; x < b; x += 4) {
+        const wx = x + cx;
+        const o = Math.round(Math.sin(wx / 9 + t * 2.4) * 1.2);
+        ctx.fillStyle = '#d6f1ff'; ctx.fillRect(x, wy + o, Math.min(4, b - x), 1);
+        ctx.fillStyle = '#a5dcff'; ctx.fillRect(x, wy + o + 1, Math.min(4, b - x), 1);
+        if (hash2(Math.floor(wx / 4), 77) > 0.86) { ctx.fillStyle = '#b9e6ff'; ctx.fillRect(x, wy + 7 + (Math.floor(t * 2 + wx) % 3), 3, 1); }
+      }
+    }
+
+    this.drawParticles(g);
+
+    // Pétalos flotando (en espacio de pantalla)
+    for (let i = 0; i < 12; i++) {
+      const px = (((hash2(i, 21) * (w + 40) - t * (8 + i) - cx * 0.6) % (w + 40)) + w + 40) % (w + 40) - 20;
+      const py = (hash2(i, 22) * h + t * (9 + (i % 4) * 3) + Math.sin(t + i) * 6) % h;
+      ctx.fillStyle = i % 3 ? '#ffc2da' : '#ffffff';
+      ctx.fillRect(Math.round(px), Math.round(py), 2, 1);
+    }
+  }
+
+  disc(cx, cy, r) {
+    for (let dy = -r; dy <= r; dy++) {
+      const half = Math.floor(Math.sqrt(r * r - dy * dy));
+      this.ctx.fillRect(cx - half, cy + dy, half * 2 + 1, 1);
+    }
+  }
+
+  tiled(layer, factor, y) {
+    const off = Math.floor(this.cx * factor) % BG_W;
+    for (let x = -off; x < this.w; x += BG_W) this.ctx.drawImage(layer, x, y);
+  }
+
+  spark(x, y, color, big) {
+    const ctx = this.ctx;
+    ctx.fillStyle = color;
+    if (big) { ctx.fillRect(x - 2, y, 5, 1); ctx.fillRect(x, y - 2, 1, 5); }
+    else { ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3); }
+  }
+
+  // Guirnalda de corazones de la zona final
+  garland(t) {
+    const gl = this.level.garland;
+    const ctx = this.ctx;
+    const x1 = gl.x1 - this.cx, x2 = gl.x2 - this.cx;
+    if (x2 < -10 || x1 > this.w + 10) return;
+    const top = gl.y - 58 - this.cy;
+    for (const x of [x1, x2]) {
+      for (let y = 0; y < 58; y++) {
+        ctx.fillStyle = Math.floor(y / 4) % 2 ? '#ff9ec4' : '#fff7ea';
+        ctx.fillRect(x - 1, top + y, 3, 1);
+      }
+      ctx.drawImage(this.S.hearts[0].c, x - 3, top - 6);
+    }
+    const n = 13;
+    for (let i = 1; i < n; i++) {
+      const k = i / n;
+      const x = Math.round(x1 + (x2 - x1) * k);
+      const sag = Math.round(Math.sin(k * Math.PI) * 16 + Math.sin(t * 2 + i) * 1);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x - 4, top + 2 + sag, 8, 1);
+      const s = i % 2 ? this.S.hearts[i % 3].c : this.S.heartsSmall[i % 3].c;
+      ctx.drawImage(s, x - (s.width >> 1), top + 4 + sag);
+    }
+  }
+
+  // ---------- Ella ----------
+  drawHer(g) {
+    const p = g.player;
+    if (g.respawnT > 0) return;
+    if (g.invulnT > 0 && Math.floor(g.time * 16) % 2) return;
+    const S = this.S.her;
+    const t = g.time;
+    const mood = g.mood;
+    let torso = 'idle', legs = 'stand', dy = 0, headDy = 0, hop = 0;
+    const reacting = p.reactT > 0 && p.onGround;
+
+    if (p.cheer || reacting) {
+      const k = p.cheer ? (t * 2.1) % 1 : 1 - p.reactT / REACT_TIME;
+      hop = -Math.round(Math.sin(k * Math.PI) * (p.cheer ? 8 : 6));
+      torso = 'fall';
+      legs = hop < -2 ? 'jump' : 'stand';
+    } else if (!p.onGround) {
+      if (p.vy < 0) { torso = 'up'; legs = 'jump'; }
+      else { torso = 'fall'; legs = 'fall'; }
+    } else if (p.landT > 0) {
+      legs = 'squat'; dy = 2;
+    } else if (Math.abs(p.vx) > 14) {
+      const f = Math.floor(p.walkPhase / 7) % 4;
+      legs = ['stride', 'passR', 'stride', 'passL'][f];
+      torso = f % 2 ? 'idle' : 'swing';
+      dy = f % 2 ? -1 : 0;
+      if (mood <= 1 && f % 2 === 0) headDy = 1; // pisa fuerte cuando está brava
+    } else if (mood <= 1) {
+      torso = 'crossed';
+      legs = mood === 0 && Math.floor(t * 5) % 2 ? 'tap' : 'stand';
+    } else if (mood === 2) {
+      torso = 'crossed';
+      headDy = Math.floor(t * 1.4) % 2;
+    } else {
+      dy = -(Math.floor(t * (mood >= 4 ? 4 : 2.4)) % 2);
+      if (mood >= 5 && Math.floor(t * 2) % 2) torso = 'swing';
+    }
+
+    const flip = p.facing < 0;
+    const k = flip ? 'f' : 'c';
+    const x = Math.round(p.x) - 8 - this.cx;
+    const y = Math.round(p.y) - this.cy + hop;
+    const ctx = this.ctx;
+    ctx.drawImage(S.legs[legs][k], x, y - 5);
+    ctx.drawImage(S.torso[torso][k], x, y - 12 + dy);
+    const hy = y - 24 + dy + headDy;
+    ctx.drawImage(S.head[k], x, hy);
+    ctx.drawImage(S.faces[mood][k], x + (flip ? 3 : 5), hy + 6);
+    if (mood <= 3 && (t + 0.3) % 3.4 < 0.13) ctx.drawImage(S.blink[k], x + (flip ? 3 : 5), hy + 6);
+    if (mood <= 1 && (t % 1.3 < (mood === 0 ? 0.85 : 0.4))) {
+      ctx.drawImage(this.S.anger.c, x + (flip ? -3 : 12), hy - 3 - (Math.floor(t * 6) % 2));
+    }
+  }
+
+  // ---------- Él ----------
+  drawHim(g) {
+    const n = g.npc;
+    const S = this.S.him;
+    const t = g.time;
+    const dist = Math.abs(g.player.x - n.x);
+    let torso = 'hold', legs = 'stand', hop = 0, bag = [13, 9 + (Math.floor(t * 2) % 2)];
+    let face = n.love ? 'love' : g.mood <= 1 ? 'nervous' : 'happy';
+
+    if (n.state === 'leaving') {
+      hop = -Math.round(Math.sin(Math.min(1, n.t / 0.45) * Math.PI) * 10);
+      torso = 'cheer'; legs = 'hop'; bag = [10, -4];
+    } else if (n.cheerT > 0 || n.love) {
+      const k = (t * (n.love ? 2.1 : 3)) % 1;
+      hop = -Math.round(Math.sin(k * Math.PI) * (n.love ? 4 : 5));
+      if (n.love && g.ending.t < 4.4) { bag = [15, 8]; hop = 0; }
+      else { torso = 'cheer'; legs = hop < -1 ? 'hop' : 'stand'; bag = [10, -4]; }
+      if (!n.love) face = 'happy';
+    } else if (g.state === 'title' || (!n.spoken && dist < 190)) {
+      torso = Math.floor(t * 5) % 2 ? 'waveA' : 'waveB';
+    }
+
+    const flip = n.facing < 0;
+    const k = flip ? 'f' : 'c';
+    const x = Math.round(n.x) - 8 - this.cx;
+    const top = Math.round(n.y) - 26 - this.cy + hop;
+    if (x < -40 || x > this.w + 40) return;
+    const ctx = this.ctx;
+    ctx.drawImage(S.legs[legs][k], x, top + 20);
+    ctx.drawImage(S.torso[torso][k], x, top + 8);
+    ctx.drawImage(S.head[k], x, top);
+    ctx.drawImage(S.faces[face][k], x + 4, top + 5);
+    ctx.drawImage(this.S.bag[k], x + (flip ? 16 - bag[0] - 9 : bag[0]), top + bag[1]);
+  }
+
+  // ---------- Partículas ----------
+  drawParticles(g) {
+    const ctx = this.ctx;
+    for (const p of g.particles) {
+      const x = Math.round(p.x) - this.cx, y = Math.round(p.y) - this.cy;
+      if (x < -8 || x > this.w + 8 || y < -8 || y > this.h + 8) continue;
+      const k = p.life / p.max;
+      if (p.type === 'heart') {
+        if (k < 0.25 && Math.floor(g.time * 20) % 2) continue;
+        const s = (p.small ? this.S.heartsSmall : this.S.hearts)[p.variant || 0];
+        ctx.drawImage(s.c, x - (s.w >> 1), y - (s.h >> 1));
+      } else if (p.type === 'spark') {
+        if (k < 0.3 && Math.floor(g.time * 24) % 2) continue;
+        this.spark(x, y, p.color || '#ffffff', k > 0.6);
+      } else if (p.type === 'splash') {
+        ctx.fillStyle = k > 0.5 ? '#d6f1ff' : '#a5dcff';
+        ctx.fillRect(x, y, 2, 2);
+      } else {
+        // polvo, humo y vapor: bolitas que se encogen
+        const r = p.type === 'dust' ? (k > 0.5 ? 2 : 1) : k > 0.66 ? 3 : k > 0.33 ? 2 : 1;
+        ctx.fillStyle = p.type === 'steam' ? '#ffffff' : p.type === 'puff' ? '#fff7ea' : '#f3e4d4';
+        ctx.fillRect(x - r + 1, y - r, r * 2 - 1, r * 2 + 1);
+        ctx.fillRect(x - r, y - r + 1, r * 2 + 1, r * 2 - 1);
+      }
+    }
+  }
+}
