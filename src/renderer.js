@@ -353,6 +353,7 @@ export class Renderer {
     }
 
     if (night) this.flashlight(g);
+    this.talkIcons(g);
     this.drawParticles(g);
 
     // Pétalos flotando (en espacio de pantalla)
@@ -553,10 +554,11 @@ export class Renderer {
     const t = g.time;
     for (const id in g.suspects) {
       const s = g.suspects[id];
-      const sp = this.S[id];
+      const sp = id === 'chif' && Math.floor(t * 5) % 2 ? this.S.chifWag : this.S[id]; // Chif mueve la colita
       const x = Math.round(s.x) - (sp.w >> 1) - this.cx;
       if (x < -30 || x > this.w + 30) continue;
-      const bob = g.bubbles[id] ? Math.floor(t * 6) % 2 : Math.floor(t * 1.6 + s.x) % 2 ? 0 : 0;
+      // En el menú, Chif y el Cariñosito se mecen igual que Pipu.
+      const bob = g.bubbles[id] ? Math.floor(t * 6) % 2 : lvl.id === 'menu' && id !== 'tiana' ? Math.floor(t * 2.2 + (id === 'chif' ? 0.5 : 0)) % 2 : 0;
       // Dibujados mirando a la derecha; se voltean hacia la detective.
       ctx.drawImage(sp[s.facing < 0 ? 'f' : 'c'], x, Math.round(s.y) - sp.h - this.cy - bob);
     }
@@ -601,6 +603,21 @@ export class Renderer {
       ctx.fillStyle = '#b9a3e3'; ctx.fillRect(bx - 12, by - 8, 24, 3);
       ctx.fillStyle = '#d6c7f2'; ctx.fillRect(bx - 12, by - 9, 24, 1);
     }
+  }
+
+  // Globito sobre quien todavía no ha sido interrogado: "tócame".
+  talkIcons(g) {
+    if (g.mode !== 'pipu' || g.state !== 'playing') return;
+    const sp = this.S.talk;
+    const put = (x, top) => {
+      const sx = Math.round(x) - 4 - this.cx;
+      if (sx < -12 || sx > this.w + 12) return;
+      const near = Math.abs(g.player.x - x) < 70;
+      const bounce = Math.floor(g.time * (near ? 6 : 2.5)) % 2;
+      this.ctx.drawImage(sp.c, sx, Math.round(top) - 10 - bounce - this.cy);
+    };
+    for (const id in g.suspects) if (!g.suspects[id].spoken) put(g.suspects[id].x, g.suspects[id].y - (id === 'chif' ? 13 : 17));
+    if (g.nico.spoken && !g.nico.asked && !g.npc.hidden) put(g.npc.x, g.npc.y - 27);
   }
 
   // ---------- La linterna de la detective ----------

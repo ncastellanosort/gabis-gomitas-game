@@ -270,10 +270,9 @@ function syncBubbles() {
 }
 
 // ------------------------------------------------------------
-// Primer plano: cuando habla un testigo o sospechoso del nivel 2, la cámara
+// Primer plano: al tocar a un sospechoso del nivel 2 para interrogarlo, la cámara
 // corta a su carita en grande con el texto abajo. Enter o un toque para seguir.
 // ------------------------------------------------------------
-const CLOSEUP = new Set(['chif', 'tiana', 'carino', 'him']);
 function openCloseup(who) {
   const b = game.bubbles[who];
   if (!b) return;
@@ -453,7 +452,7 @@ function onGameEvent(name, data) {
   switch (name) {
     case 'talk':
       audio.sfx('talk');
-      if (game.mode === 'pipu' && game.state === 'playing' && CLOSEUP.has(data.who)) openCloseup(data.who);
+      if (data.closeup && game.state === 'playing') openCloseup(data.who);
       break;
     case 'jump': case 'land': case 'spring': case 'splash': case 'respawn': case 'poof': case 'bark': case 'burp': case 'reveal':
       audio.sfx(name);

@@ -287,6 +287,17 @@ const CARINO = [
   'bbdbb....bbdbb',
 ];
 
+// Segundo cuadro de Chif: la colita arriba.
+const CHIF_WAG = [
+  ...CHIF.slice(0, 8),
+  '.oo..oooooobbb..',
+  'owwo.oooooobbb..',
+  'oowwoooooobbbb..',
+  '.oowo.bbb.bbb...',
+  '......bbb.bbb...',
+];
+const TALK = ['.wwwwwww.', 'wwwwwwwww', 'wkwwkwwkw', 'wwwwwwwww', '.wwwwwww.', '...ww....', '...w.....'];
+
 const TIANA = [
   '..bb......bb..',
   '..bpb....bpb..',
@@ -467,6 +478,8 @@ export function buildSprites(config) {
   return {
     arya: mapRows('arya', ARYA, { a: A.coat, e: A.ears, w: A.light, k: '#2a1a1a', n: A.nose }),
     chif: fromRows('chif', CHIF, { o: C.coat, w: C.light, b: C.dark, k: '#2a1a1a', n: C.nose }),
+    chifWag: fromRows('chifWag', CHIF_WAG, { o: C.coat, w: C.light, b: C.dark, k: '#2a1a1a', n: C.nose }),
+    talk: fromRows('talk', TALK, { w: '#ffffff', k: '#3b2244' }),
     tiana: fromRows('tiana', TIANA, { b: Ti.pajama, B: Ti.pajamaShade, p: Ti.earInside, w: Ti.wool, f: Ti.face, k: '#2a1a1a', m: '#d9788a' }),
     carino: fromRows('carino', CARINO, { b: config.carino.fur, B: config.carino.shade, w: '#ffffff', c: config.carino.cloud, d: config.carino.cloud, n: config.carino.nose, k: '#22305a', m: '#22305a' }),
     pipu: { awake: fromRows('pipu', PIPU, pipuPal), sleep: fromRows('pipuSleep', PIPU_SLEEP, pipuPal) },

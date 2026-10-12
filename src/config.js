@@ -71,6 +71,7 @@ export const CONFIG = {
         'CASO 001: el asesinato de Pipu',
         'Víctima: pingüino de peluche, chiquito y gordito',
         'Detective a cargo: Gabis. Asistente: Arya',
+        'Toca o haz clic sobre un sospechoso para interrogarlo',
         'Usa tu linterna: alguien se esconde en la oscuridad',
       ],
       cluesLabel: 'Pistas',
@@ -108,7 +109,7 @@ export const CONFIG = {
         nico: 'Yo solo vine por mis gomitas. Desaparecieron esta noche.',
         carino: 'Yo estaba hablando con Pipu... ¡y de repente desapareció! :(',
       },
-      notAsked: 'Aún no lo has interrogado.',
+      notAsked: 'Sin interrogar. Tócalo o hazle clic en el jardín.',
       // La sombra que huye (resulta ser su bobio buscando sus gomitas)
       shadowLines: ['¿Quién anda ahí?', '¡Otra vez esa sombra!', '¡Alto ahí! ¡Policía de peluches!'],
       shadowNote: 'Huye cada vez que te acercas.',

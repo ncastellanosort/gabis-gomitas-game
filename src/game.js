@@ -272,10 +272,10 @@ export class Game {
     }
   }
 
-  say(who, text, dur) {
+  say(who, text, dur, closeup = false) {
     this.lastSaid[who] = text;
     this.bubbles[who] = { text, t: dur, id: ++this.bubbleSeq };
-    this.emit('talk', { who });
+    this.emit('talk', { who, closeup }); // closeup: mostrarlo en primer plano
     return true;
   }
 
@@ -405,7 +405,7 @@ export class Game {
     else if (!a.moving) a.facing = a.override && a.override.face ? a.override.face : pl.x >= a.x ? 1 : -1;
     a.air = !a.override && air && a.moving;
     a.idleT = a.moving ? 0 : a.idleT + dt;
-    a.sit = !a.moving && (wantSit || a.idleT > 1.6);
+    a.sit = !a.moving && (wantSit || (a.idleT > 1.6 && this.mode !== 'menu')); // en el menú se queda de pie moviendo la cola
   }
 
   // Tocar (o hacer clic) sobre alguien vuelve a mostrar lo último que dijo;
@@ -420,13 +420,38 @@ export class Game {
     const again = (who) => () => this.lastSaid[who] && this.say(who, this.lastSaid[who], 4.5);
     add(this.player.x, this.player.y, 26, again('her'));
     add(this.arya.x, this.arya.y, 14, again('arya'));
-    if (!this.npc.hidden && !this.npc.shadow) add(this.npc.x, this.npc.y, 28, again('him'));
-    for (const id in this.suspects) add(this.suspects[id].x, this.suspects[id].y, 20, again(id));
+    const asking = this.mode === 'pipu' && this.state === 'playing';
+    if (!this.npc.hidden && !this.npc.shadow) add(this.npc.x, this.npc.y, 28, asking ? () => this.interrogate('nico') : again('him'));
+    for (const id in this.suspects) add(this.suspects[id].x, this.suspects[id].y, 20, asking ? () => this.interrogate(id) : again(id));
     if (this.pipu.state !== 'hidden') add(this.level.bed.x, this.level.bed.y, 22, again('pipu'));
     this.papers.forEach((p, i) => p.read && add(p.x, p.y, 18, () => this.say('her', this.config.texts.pipu.papers[i], 4.6)));
     targets.sort((a, b) => a.d - b.d);
     for (const t of targets) if (t.show()) return true;
     return false;
+  }
+
+  // Interrogar: al tocar a un sospechoso, cuenta su coartada en primer plano.
+  // Con todas las pistas, alterna con la indirecta que tenga guardada.
+  interrogate(id) {
+    if (this.mode !== 'pipu' || this.state !== 'playing') return false;
+    const T = this.config.texts.pipu;
+    if (id === 'nico') {
+      if (!this.nico.spoken) return false; // la sombra no se deja interrogar
+      this.nico.asked = true;
+      return this.say('him', T.alibi.nico, 4.5, true);
+    }
+    const s = this.suspects[id];
+    if (!s) return false;
+    let text = T.alibi[id];
+    if (s.spoken && T.hint[id] && this.count === this.total) {
+      s.hinted = !s.hinted;
+      if (s.hinted) text = T.hint[id];
+    }
+    if (!s.spoken) {
+      s.spoken = true;
+      this.emit('suspect', { id });
+    }
+    return this.say(id, text, 4.5, true);
   }
 
   // Dónde está la cabeza de cada personaje (para los globos de diálogo).
@@ -469,20 +494,10 @@ export class Game {
     const T = this.config.texts.pipu;
     this.guardCd = Math.max(0, this.guardCd - dt);
 
-    // Interrogatorios: cada sospechoso da su coartada al acercarse.
+    // Los sospechosos miran a la detective. Solo hablan si ella los toca (ver interrogate).
     for (const id in this.suspects) {
       const s = this.suspects[id];
-      const dx = pl.x - s.x;
-      if (Math.abs(dx) > 4) s.facing = dx < 0 ? -1 : 1;
-      const near = Math.abs(dx) < 70 && Math.abs(pl.y - s.y) < 60;
-      if (near && !s.spoken) {
-        s.spoken = true;
-        this.say(id, T.alibi[id], 4.2);
-        this.emit('suspect', { id });
-      } else if (near && s.spoken && !s.hinted && T.hint[id] && this.count === this.total && !this.bubbles[id]) {
-        s.hinted = true;
-        this.say(id, T.hint[id], 4.2);
-      }
+      if (Math.abs(pl.x - s.x) > 4) s.facing = pl.x < s.x ? -1 : 1;
     }
 
     // La pista escondida: Arya corre a sentarse encima y solo se ve cuando se levanta.

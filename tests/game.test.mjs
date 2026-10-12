@@ -210,7 +210,11 @@ test('nivel 2: caso completo, acusaciones y final', () => {
   assert.equal(game.count, 5, 'recoge las 5 pistas');
   assert.equal(events.filter((e) => e.name === 'clue').length, 5);
   assert.equal(events.filter((e) => e.name === 'allClues').length, 1);
-  assert.ok(game.suspects.chif.spoken && game.suspects.tiana.spoken, 'los dos sospechosos dieron su coartada');
+  assert.ok(!game.suspects.chif.spoken && !game.suspects.tiana.spoken, 'nadie habla solo por pasar cerca');
+  assert.equal(game.tapAt(game.suspects.chif.x, game.suspects.chif.y - 6), true);
+  assert.ok(game.suspects.chif.spoken, 'al tocarlo, Chif da su coartada');
+  assert.deepEqual(events.filter((e) => e.name === 'talk').at(-1).data, { who: 'chif', closeup: true }, 'y sale en primer plano');
+  assert.equal(game.interrogate('nico'), true, 'a él también se le puede interrogar ya desenmascarado');
   assert.equal(game.state, 'playing', 'el caso no se cierra solo');
 
   // Acusaciones falsas: se defienden y cuentan como fallo.
@@ -264,16 +268,21 @@ test('Arya acompaña en los dos niveles sin quedarse atrás', () => {
   }
 });
 
-test('tocar a un personaje vuelve a mostrar lo último que dijo', () => {
+test('los sospechosos solo hablan cuando se les toca', () => {
   const game = new Game(CONFIG, pipu);
   game.start();
-  run(game, NONE, 0.5); // el Cariñosito da su declaración al empezar
   const c = game.suspects.carino;
-  assert.equal(game.bubbles.carino.text, CONFIG.texts.pipu.alibi.carino);
-  run(game, NONE, 6);
-  assert.equal(game.bubbles.carino, undefined, 'el globo ya se fue');
-  assert.equal(game.tapAt(c.x + 3, c.y - 8), true);
-  assert.equal(game.bubbles.carino.text, CONFIG.texts.pipu.alibi.carino, 'vuelve a salir al tocarlo');
+  game.player.reset(c.x - 30, c.y); // ella está al lado
+  run(game, NONE, 2);
+  assert.equal(game.bubbles.carino, undefined, 'estar cerca no basta');
+  assert.equal(c.spoken, false);
   assert.equal(game.tapAt(c.x + 300, c.y - 150), false, 'tocar el vacío no hace nada');
-  assert.equal(game.tapAt(game.suspects.chif.x, game.suspects.chif.y - 8), false, 'quien no ha hablado no dice nada');
+  assert.equal(game.tapAt(c.x + 3, c.y - 8), true);
+  assert.equal(game.bubbles.carino.text, CONFIG.texts.pipu.alibi.carino, 'al tocarlo declara');
+  assert.equal(c.spoken, true);
+  run(game, NONE, 6);
+  assert.equal(game.bubbles.carino, undefined, 'el texto se va');
+  assert.equal(game.tapAt(c.x, c.y - 8), true);
+  assert.equal(game.bubbles.carino.text, CONFIG.texts.pipu.alibi.carino, 'y vuelve al tocarlo otra vez');
+  assert.equal(game.interrogate('nico'), false, 'la sombra no se deja interrogar');
 });
